@@ -23,8 +23,12 @@
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "build": "tsdown",
+    "regen": "node monogram/src/cli.ts grammar/jora.ts",
+    "build": "pnpm run regen && tsdown",
     "dev": "tsdown --watch",
     "lint": "eslint",
     "prepublishOnly": "nr build",
@@ -57,6 +61,6 @@
     "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && pnpm run build && npx nano-staged"
   },
   "nano-staged": {
-    "*": "eslint --fix"
+    "*.{js,mjs,cjs,ts,mts,cts,json,jsonc,md,yml,yaml}": "eslint --fix --no-warn-ignored"
   }
 }

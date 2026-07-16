@@ -14,12 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: pnpm/action-setup@v6
         with:
           run_install: false
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 24
           cache: pnpm
 
       - run: pnpm i -g @antfu/ni
@@ -27,17 +29,24 @@ jobs:
       - run: nr lint
       - run: nr typecheck
 
+      # Guard: the committed generated artifacts must match `grammar/jora.ts`.
+      - run: nr regen
+      - name: Fail if generated artifacts are stale
+        run: git diff --exit-code -- grammar
+
   test:
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        node: [lts/*]
+        node: [24]
         os: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: pnpm/action-setup@v6
         with:
           run_install: false

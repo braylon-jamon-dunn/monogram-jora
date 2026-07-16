@@ -1,0 +1,279 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "jora",
+  "scopeName": "source.jora",
+  "patterns": [
+    {
+      "include": "#linecomment"
+    },
+    {
+      "include": "#blockcomment"
+    },
+    {
+      "include": "#string"
+    },
+    {
+      "include": "#object-method-key"
+    },
+    {
+      "include": "#number"
+    },
+    {
+      "include": "#scope-keyword-operator-logical"
+    },
+    {
+      "include": "#scope-constant-language-boolean-true"
+    },
+    {
+      "include": "#scope-constant-language-boolean-false"
+    },
+    {
+      "include": "#scope-constant-language-null"
+    },
+    {
+      "include": "#scope-constant-language"
+    },
+    {
+      "include": "#method-call"
+    },
+    {
+      "include": "#property-access"
+    },
+    {
+      "include": "#operator-overrides"
+    },
+    {
+      "include": "#scope-punctuation-accessor"
+    },
+    {
+      "include": "#scope-punctuation-bracket-round"
+    },
+    {
+      "include": "#scope-punctuation-bracket-square"
+    },
+    {
+      "include": "#scope-punctuation-separator-comma"
+    },
+    {
+      "include": "#function-call"
+    },
+    {
+      "include": "#variable"
+    },
+    {
+      "include": "#ident"
+    }
+  ],
+  "repository": {
+    "linecomment": {
+      "name": "comment.line.double-slash.jora.jora",
+      "match": "//[^\\n]*"
+    },
+    "blockcomment": {
+      "name": "comment.block.jora.jora",
+      "begin": "/\\*",
+      "end": "\\**\\*/"
+    },
+    "variable": {
+      "name": "variable.other.jora.jora",
+      "match": "\\$[a-zA-Z0-9_]*"
+    },
+    "ident": {
+      "name": "variable.other.readwrite.jora",
+      "match": "[a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*"
+    },
+    "number": {
+      "name": "constant.numeric.jora.jora",
+      "match": "[0-9]+(?:\\.[0-9]+)?(?:[eE][+\\-]?[0-9]+)?"
+    },
+    "string": {
+      "name": "string.quoted.double.jora",
+      "match": "\"(?:[^\"\\\\\\n]|\\\\[^\\n])*\"|'(?:[^'\\\\\\n]|\\\\[^\\n])*'"
+    },
+    "function-call": {
+      "match": "([a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*)(?=\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "entity.name.function.jora"
+        }
+      }
+    },
+    "object-method-key": {
+      "match": "([a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*)(?=\\s*:\\s*(?:\\w+\\s+)?[\\(])",
+      "captures": {
+        "1": {
+          "name": "entity.name.function.jora"
+        }
+      }
+    },
+    "method-call": {
+      "match": "(?<=[\\w\\]\\)])(\\.)\\s*([a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*)(?=\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor.jora"
+        },
+        "2": {
+          "name": "entity.name.function.jora"
+        }
+      }
+    },
+    "property-access": {
+      "match": "(?<=[\\w\\]\\)])(\\.)\\s*([a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*)",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor.jora"
+        },
+        "2": {
+          "name": "entity.other.property.jora"
+        }
+      }
+    },
+    "scope-constant-language-boolean-true": {
+      "match": "\\b(true)\\b",
+      "name": "constant.language.boolean.true.jora"
+    },
+    "scope-constant-language-boolean-false": {
+      "match": "\\b(false)\\b",
+      "name": "constant.language.boolean.false.jora"
+    },
+    "scope-constant-language-null": {
+      "match": "\\b(null|undefined)\\b",
+      "name": "constant.language.null.jora"
+    },
+    "scope-constant-language": {
+      "match": "\\b(NaN|Infinity)\\b",
+      "name": "constant.language.jora"
+    },
+    "scope-keyword-operator-logical": {
+      "match": "\\b(or|and|not)\\b",
+      "name": "keyword.operator.logical.jora"
+    },
+    "scope-punctuation-accessor": {
+      "match": "\\.",
+      "name": "punctuation.accessor.jora"
+    },
+    "operator-overrides": {
+      "match": "(\\?\\?)|(!=)|(~=)|(<=)|(>=)|(=)|(<)|(>)|(\\|)|(\\+)|(-)|(\\*)|(/)|(%)",
+      "captures": {
+        "1": {
+          "name": "keyword.operator.logical.jora"
+        },
+        "2": {
+          "name": "keyword.operator.comparison.jora"
+        },
+        "3": {
+          "name": "keyword.operator.comparison.jora"
+        },
+        "4": {
+          "name": "keyword.operator.relational.jora"
+        },
+        "5": {
+          "name": "keyword.operator.relational.jora"
+        },
+        "6": {
+          "name": "keyword.operator.comparison.jora"
+        },
+        "7": {
+          "name": "keyword.operator.relational.jora"
+        },
+        "8": {
+          "name": "keyword.operator.relational.jora"
+        },
+        "9": {
+          "name": "keyword.operator.pipeline.jora"
+        },
+        "10": {
+          "name": "keyword.operator.arithmetic.jora"
+        },
+        "11": {
+          "name": "keyword.operator.arithmetic.jora"
+        },
+        "12": {
+          "name": "keyword.operator.arithmetic.jora"
+        },
+        "13": {
+          "name": "keyword.operator.arithmetic.jora"
+        },
+        "14": {
+          "name": "keyword.operator.arithmetic.jora"
+        }
+      }
+    },
+    "scope-punctuation-bracket-round": {
+      "match": "\\(|\\)",
+      "name": "punctuation.bracket.round.jora"
+    },
+    "scope-punctuation-bracket-square": {
+      "match": "\\[|\\]",
+      "name": "punctuation.bracket.square.jora"
+    },
+    "scope-punctuation-separator-comma": {
+      "match": ",",
+      "name": "punctuation.separator.comma.jora"
+    },
+    "expression": {
+      "patterns": [
+        {
+          "include": "#linecomment"
+        },
+        {
+          "include": "#blockcomment"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "include": "#object-method-key"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#scope-keyword-operator-logical"
+        },
+        {
+          "include": "#scope-constant-language-boolean-true"
+        },
+        {
+          "include": "#scope-constant-language-boolean-false"
+        },
+        {
+          "include": "#scope-constant-language-null"
+        },
+        {
+          "include": "#scope-constant-language"
+        },
+        {
+          "include": "#method-call"
+        },
+        {
+          "include": "#property-access"
+        },
+        {
+          "include": "#operator-overrides"
+        },
+        {
+          "include": "#scope-punctuation-accessor"
+        },
+        {
+          "include": "#scope-punctuation-bracket-round"
+        },
+        {
+          "include": "#scope-punctuation-bracket-square"
+        },
+        {
+          "include": "#scope-punctuation-separator-comma"
+        },
+        {
+          "include": "#function-call"
+        },
+        {
+          "include": "#variable"
+        },
+        {
+          "include": "#ident"
+        }
+      ]
+    }
+  }
+}

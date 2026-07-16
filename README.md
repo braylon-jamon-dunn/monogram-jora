@@ -6,7 +6,50 @@
 [![JSDocs][jsdocs-src]][jsdocs-href]
 [![License][license-src]][license-href]
 
-_description_
+Syntax-highlighting artifacts for the [Jora](https://github.com/discoveryjs/jora)
+query language, derived from a single grammar definition with
+[Monogram](https://github.com/johnsoncodehk/monogram).
+
+You write the grammar once in Monogram's combinator API
+([`grammar/jora.ts`](./grammar/jora.ts)); Monogram derives the TextMate grammar,
+a VS Code language configuration, a Monaco Monarch tokenizer, and a tree-sitter
+grammar from it.
+
+> **Status:** early setup. `grammar/jora.ts` is currently a **stub** covering
+> only part of Jora's surface syntax — enough to prove the generation pipeline
+> end-to-end. Fleshing it out into a complete, conformance-proven grammar is
+> follow-up work.
+
+## Layout
+
+- [`monogram/`](./monogram) — the Monogram engine, pinned as a **git submodule**.
+  Clone with `git clone --recurse-submodules`, or run
+  `git submodule update --init` in an existing checkout.
+- [`grammar/jora.ts`](./grammar/jora.ts) — the Jora grammar definition (the
+  source of truth). It imports Monogram's API from the submodule.
+- `grammar/jora.tmLanguage.json`, `grammar/jora.language-configuration.json`,
+  `grammar/jora.monarch.json`, `grammar/jora.cst-match.ts`,
+  `grammar/tree-sitter/jora/*` — **generated** artifacts, committed to the repo.
+
+## Regenerating
+
+Requires **Node 24+** (Monogram runs `.ts` directly).
+
+```bash
+pnpm run regen   # node monogram/src/cli.ts grammar/jora.ts
+```
+
+`pnpm run build` regenerates before building, and CI fails if the committed
+artifacts drift from `grammar/jora.ts`. Edit the grammar, run `regen`, and
+commit the resulting diff.
+
+## Usage
+
+The generated files are re-exported from the package:
+
+```ts
+import { languageConfiguration, monarch, tmLanguage } from 'monogram-jora'
+```
 
 ## Note for Developers
 
