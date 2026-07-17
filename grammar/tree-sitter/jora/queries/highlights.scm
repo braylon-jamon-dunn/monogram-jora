@@ -10,25 +10,44 @@
 (ident) @variable
 
 ;; Structural member / type-param / property-access captures.
+(property_key (ident) @property)
 (expr (expr) (ident) @property)
 
 ;; Literal token nodes.
 (line_comment) @comment
 (block_comment) @comment
-(variable) @variable
 (number) @number
 (string) @string
+(regex_literal) @string.regexp
+(template_chars) @string
+(variable) @variable
+(arg1) @variable.builtin
+(current) @variable.builtin
+(data) @variable.builtin
+(context) @variable.builtin
+(template "`") @string
+(template_substitution "${") @punctuation.special
+(template_substitution "}") @punctuation.special
+
+;; Well-known property names.
+((ident) @operator
+  (#any-of? @operator ".."))
+((ident) @punctuation.delimiter
+  (#any-of? @punctuation.delimiter "." "(" "[" ".("))
 
 ;; Keyword, operator, and punctuation literals.
 [
   "undefined" "Infinity" "false" "true" "null" "NaN"
 ] @constant.builtin
 [
-  "and" "not" "or" "??" "!=" "~=" "<=" ">="
-  "=" "<" ">" "+" "-" "*" "/" "%"
-  "|"
+  "descNA" "descAN" "ascNA" "ascAN" "descN" "descA" "ascN" "ascA"
+  "desc" "and" "not" "has" "asc" "or" "no" "??"
+  "is" "in" "!=" "~=" "<=" ">=" "=>" "="
+  "<" ">" "+" "-" "*" "/" "%" "|"
 ] @operator
 [
-  "(" ")" "[" "]"
+  "(" ")" "[" "]" "{" "}"
 ] @punctuation.bracket
-"," @punctuation.delimiter
+[
+  "," ":" ";" "?"
+] @punctuation.delimiter

@@ -19,48 +19,122 @@ module.exports = grammar({
 
   word: $ => $.ident,
 
+  externals: $ => [
+    $.regex_literal,
+    $.template_chars
+  ],
+
   conflicts: $ => [
     [$.expr],
+    [$.expr, $.block],
+    [$.property],
   ],
 
   rules: {
+    block: $ => seq(repeat($.definition), optional($.expr)),
+
     expr: $ => choice(
       prec.left(1, seq($.expr, field('operator', "or"), $.expr)),
       prec.left(2, seq($.expr, field('operator', "and"), $.expr)),
       prec.left(3, seq($.expr, field('operator', "??"), $.expr)),
-      prec(4, seq($.expr, field('operator', choice("=", "!=", "~=", "<", "<=", ">", ">=")), $.expr)),
-      prec.left(5, seq($.expr, field('operator', "|"), $.expr)),
-      prec.left(6, seq($.expr, field('operator', choice("+", "-")), $.expr)),
-      prec.left(7, seq($.expr, field('operator', choice("*", "/", "%")), $.expr)),
-      prec.right(8, seq(field('operator', choice("not", "-")), $.expr)),
+      prec.left(4, seq($.expr, field('operator', choice("in", "has")), $.expr)),
+      prec(5, seq($.expr, field('operator', choice("=", "!=", "~=")), $.expr)),
+      prec(6, seq($.expr, field('operator', choice("<", "<=", ">", ">=")), $.expr)),
+      prec.left(7, seq($.expr, field('operator', choice("+", "-")), $.expr)),
+      prec.left(8, seq($.expr, field('operator', choice("*", "/", "%")), $.expr)),
+      prec.right(9, seq(field('operator', choice("not", "no", "-", "+")), $.expr)),
+      $.fn,
+      $.number,
+      $.string,
+      $.regex_literal,
+      $.template,
       "true",
       "false",
       "null",
       "undefined",
       "NaN",
       "Infinity",
+      $.data,
+      $.context,
+      $.arg1,
+      $.current,
       $.variable,
       $.ident,
-      $.number,
-      $.string,
-      seq("(", $.expr, ")"),
-      prec.left(9, seq($.expr, ".", $.ident)),
-      prec.left(9, seq($.expr, "[", $.expr, "]")),
-      prec.left(9, seq($.expr, "(", optional(seq($.expr, repeat(seq(",", $.expr)), optional(","))), ")"))
+      seq("is", $.assertion),
+      seq("|", $.block),
+      seq("(", optional($.block), ")"),
+      seq("[", optional($.expr), ":", optional($.expr), optional(seq(":", optional($.expr))), "]"),
+      seq("[", optional(seq(choice(seq("...", optional($.expr)), $.expr), repeat(seq(",", choice(seq("...", optional($.expr)), $.expr))), optional(","))), "]"),
+      seq("{", repeat($.definition), optional(seq($.property, repeat(seq(",", $.property)), optional(","))), "}"),
+      seq(".", $.ident),
+      seq(".(", optional($.block), ")"),
+      seq(".[", optional($.block), "]"),
+      seq("..", $.ident),
+      seq("..(", optional($.block), ")"),
+      prec.left(10, seq($.expr, "|", $.block)),
+      prec.left(10, seq($.expr, "?", optional($.expr), optional(seq(":", optional($.expr))))),
+      prec.left(10, seq($.expr, "not", "in", $.expr)),
+      prec.left(10, seq($.expr, "has", "no", $.expr)),
+      prec.left(10, seq($.expr, "is", $.assertion)),
+      prec.left(10, seq($.expr, "asc", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "ascN", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "ascA", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "ascNA", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "ascAN", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "desc", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "descN", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "descA", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "descNA", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, "descAN", repeat(seq(",", $.expr)))),
+      prec.left(10, seq($.expr, ".", $.ident)),
+      prec.left(10, seq($.expr, ".", $.variable, "(", optional(seq($.expr, repeat(seq(",", $.expr)), optional(","))), ")")),
+      prec.left(10, seq($.expr, ".(", optional($.block), ")")),
+      prec.left(10, seq($.expr, ".[", optional($.block), "]")),
+      prec.left(10, seq($.expr, "..(", optional($.block), ")")),
+      prec.left(10, seq($.expr, "..", $.ident)),
+      prec.left(10, seq($.expr, "(", optional(seq($.expr, repeat(seq(",", $.expr)), optional(","))), ")")),
+      prec.left(10, seq($.expr, "[", optional($.expr), ":", optional($.expr), optional(seq(":", optional($.expr))), "]")),
+      prec.left(10, seq($.expr, "[", optional($.expr), "]"))
     ),
 
-    line_comment: $ => token(/\/\/[^\n]*/),
+    definition: $ => seq(choice($.variable, $.current), optional(seq(":", $.expr)), ";"),
 
-    block_comment: $ => token(/\/\*(?:[^*]|\*[^\/])*\**\*\//),
+    assertion: $ => choice(seq("not", $.assertion), $.ident, "true", "false", "null", "undefined", "NaN", "Infinity", $.variable, seq("(", $.assertion, repeat(seq(choice("and", "or"), $.assertion)), ")")),
 
-    variable: $ => token(/\$[a-zA-Z0-9_]*/),
+    fn: $ => choice(seq("=>", $.expr), seq($.variable, "=>", $.expr), seq("(", ")", "=>", $.expr), seq("(", optional(seq($.variable, repeat(seq(",", $.variable)), optional(","))), ")", "=>", $.expr)),
 
-    ident: $ => token(/[a-zA-Z_][a-zA-Z0-9_]*/),
+    property: $ => choice(seq("...", optional($.expr)), seq("[", $.expr, "]", ":", $.expr), seq($.property_key, ":", $.expr), repeat1($.expr)),
 
-    number: $ => token(/[0-9]+(?:\.[0-9]+)?(?:[eE][+\-]?[0-9]+)?/),
+    property_key: $ => choice($.ident, $.string, $.number, $.variable, $.current),
 
-    string: $ => token(/"(?:[^"\\\n]|\\[^\n])*"|'(?:[^'\\\n]|\\[^\n])*'/)
+    line_comment: $ => token(/\/\/[^\n\r\u2028\u2029]*/),
+
+    block_comment: $ => token(/\/\*(?:[^*]|\*)*(?:\*+\/)?/),
+
+    number: $ => token(/0[xX][0-9a-fA-F_]+|(?:[0-9_]*\.)?[0-9_]+(?:[eE][+\-]?[0-9_]+)?/),
+
+    string: $ => token(/"(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'/),
+
+    variable: $ => token(/\$(?:[a-zA-Z_]|\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$]|\\u[0-9a-fA-F]{4})*/),
+
+    arg1: $ => token(/\$\$/),
+
+    current: $ => token(/\$/),
+
+    data: $ => token(/@/),
+
+    context: $ => token(/#/),
+
+    ident: $ => token(/(?:[a-zA-Z_]|\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$]|\\u[0-9a-fA-F]{4})*/),
+
+    template: $ => seq(
+      "`",
+      repeat(choice($.template_chars, $.template_substitution)),
+      "`"
+    ),
+
+    template_substitution: $ => seq("${", $.expr, "}")
   }
 });
 
-// entry rule: expr
+// entry rule: block
