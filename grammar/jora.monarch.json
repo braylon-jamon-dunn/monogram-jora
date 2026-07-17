@@ -1,0 +1,248 @@
+{
+  "defaultToken": "invalid",
+  "tokenPostfix": ".jora",
+  "ignoreCase": false,
+  "brackets": [
+    {
+      "open": "(",
+      "close": ")",
+      "token": "delimiter.parenthesis"
+    },
+    {
+      "open": "[",
+      "close": "]",
+      "token": "delimiter.square"
+    }
+  ],
+  "tokenizer": {
+    "comment_slashstar": [
+      [
+        "[^*]+",
+        "comment"
+      ],
+      [
+        "\\**\\*/",
+        {
+          "token": "comment",
+          "next": "@pop"
+        }
+      ],
+      [
+        ".",
+        "comment"
+      ]
+    ],
+    "string_dquote_body": [
+      [
+        "[^\"\\\\]+",
+        "string"
+      ],
+      [
+        "\\\\.",
+        "string.escape"
+      ]
+    ],
+    "string_dquote": [
+      {
+        "include": "@string_dquote_body"
+      },
+      [
+        "\"",
+        {
+          "token": "string",
+          "switchTo": "@value"
+        }
+      ]
+    ],
+    "string_dquoteN": [
+      {
+        "include": "@string_dquote_body"
+      },
+      [
+        "\"",
+        {
+          "token": "string",
+          "next": "@pop"
+        }
+      ]
+    ],
+    "string_squote_body": [
+      [
+        "[^'\\\\]+",
+        "string"
+      ],
+      [
+        "\\\\.",
+        "string.escape"
+      ]
+    ],
+    "string_squote": [
+      {
+        "include": "@string_squote_body"
+      },
+      [
+        "'",
+        {
+          "token": "string",
+          "switchTo": "@value"
+        }
+      ]
+    ],
+    "string_squoteN": [
+      {
+        "include": "@string_squote_body"
+      },
+      [
+        "'",
+        {
+          "token": "string",
+          "next": "@pop"
+        }
+      ]
+    ],
+    "exprBody": [
+      [
+        "[ \\t\\r\\n]+",
+        "white"
+      ],
+      [
+        "//.*$",
+        "comment"
+      ],
+      [
+        "/\\*",
+        {
+          "token": "comment",
+          "next": "@comment_slashstar"
+        }
+      ],
+      [
+        "\"",
+        {
+          "token": "string",
+          "switchTo": "@string_dquote"
+        }
+      ],
+      [
+        "'",
+        {
+          "token": "string",
+          "switchTo": "@string_squote"
+        }
+      ],
+      [
+        "[0-9]+(?:\\.[0-9]+)?(?:[eE][+\\-]?[0-9]+)?",
+        {
+          "token": "number",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "\\$[a-zA-Z0-9_]*",
+        {
+          "token": "variable",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "[a-zA-Z_][a-zA-Z0-9_]*",
+        {
+          "cases": {
+            "true": {
+              "token": "keyword",
+              "switchTo": "@value"
+            },
+            "false": {
+              "token": "keyword",
+              "switchTo": "@value"
+            },
+            "null": {
+              "token": "keyword",
+              "switchTo": "@value"
+            },
+            "undefined": {
+              "token": "keyword",
+              "switchTo": "@value"
+            },
+            "NaN": {
+              "token": "keyword",
+              "switchTo": "@value"
+            },
+            "Infinity": {
+              "token": "keyword",
+              "switchTo": "@value"
+            },
+            "or": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "and": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "not": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "@default": {
+              "token": "identifier",
+              "switchTo": "@value"
+            }
+          }
+        }
+      ],
+      [
+        "\\)",
+        {
+          "token": "delimiter.parenthesis",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "\\]",
+        {
+          "token": "delimiter.square",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "\\(",
+        {
+          "token": "delimiter.parenthesis",
+          "switchTo": "@root"
+        }
+      ],
+      [
+        "\\.|,",
+        {
+          "token": "delimiter",
+          "switchTo": "@root"
+        }
+      ],
+      [
+        "\\[",
+        {
+          "token": "delimiter.square",
+          "switchTo": "@root"
+        }
+      ],
+      [
+        "\\?\\?|!=|~=|<=|>=|=|<|>|\\||\\+|-|\\*|/|%",
+        {
+          "token": "operator",
+          "switchTo": "@root"
+        }
+      ]
+    ],
+    "root": [
+      {
+        "include": "@exprBody"
+      }
+    ],
+    "value": [
+      {
+        "include": "@exprBody"
+      }
+    ]
+  }
+}
