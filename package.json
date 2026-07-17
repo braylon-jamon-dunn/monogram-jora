@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@11.1.3",
-  "description": "_description_",
+  "description": "TextMate grammar, VS Code language configuration, Monaco Monarch tokenizer, and tree-sitter grammar for the Jora query language, derived from a single grammar definition with Monogram.",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
   "funding": "https://github.com/sponsors/antfu",
@@ -13,15 +13,30 @@
     "url": "git+https://github.com/antfu/monogram-jora.git"
   },
   "bugs": "https://github.com/antfu/monogram-jora/issues",
-  "keywords": [],
+  "keywords": [
+    "jora",
+    "grammar",
+    "monogram",
+    "syntax-highlighting",
+    "textmate",
+    "tmlanguage",
+    "vscode",
+    "monaco",
+    "monarch",
+    "tree-sitter"
+  ],
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./grammar/jora.tmLanguage.json": "./grammar/jora.tmLanguage.json",
+    "./grammar/jora.monarch.json": "./grammar/jora.monarch.json",
+    "./grammar/jora.language-configuration.json": "./grammar/jora.language-configuration.json"
   },
   "types": "./dist/index.d.mts",
   "files": [
-    "dist"
+    "dist",
+    "grammar/*.json"
   ],
   "engines": {
     "node": ">=24"
