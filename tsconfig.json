@@ -15,5 +15,11 @@
     "skipLibCheck": true
   },
   "include": ["src", "test"],
-  "exclude": ["node_modules", "dist", "monogram", "grammar"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "monogram",
+    "grammar",
+    "test/grammar-corpus.test.ts"
+  ]
 }

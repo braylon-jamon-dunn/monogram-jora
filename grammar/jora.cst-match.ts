@@ -40,7 +40,7 @@ const __opTok = (t: TreeAccess, cc: number, i: number): boolean => {
   const e = __SC[i];
   return e < 0 && t.leafKindOf(e) === 2;
 };
-const RULE_CANON = [0,1,2,3];
+const RULE_CANON = [0,1,2,3,4,5,6,7,8,9];
 const __nodeOf = (t: TreeAccess, cc: number, i: number, rid: number): boolean => {
   if (i >= cc) return false;
   const e = __SC[i];
@@ -48,23 +48,111 @@ const __nodeOf = (t: TreeAccess, cc: number, i: number, rid: number): boolean =>
 };
 
 export type ExprMatch =
+  | { arm: "fn"; fn: NodeEntry<"Fn"> }
+  | { arm: "number"; number: LeafEntry }
+  | { arm: "string"; string: LeafEntry }
+  | { arm: "regex"; regex: LeafEntry }
+  | { arm: "template"; template: LeafEntry | NodeEntry<'$template'> }
   | { arm: "true_" }
   | { arm: "false_" }
   | { arm: "null_" }
   | { arm: "undefined" }
   | { arm: "NaN" }
   | { arm: "Infinity" }
+  | { arm: "data"; data: LeafEntry }
+  | { arm: "context"; context: LeafEntry }
+  | { arm: "arg1"; arg1: LeafEntry }
+  | { arm: "current"; current: LeafEntry }
   | { arm: "variable"; variable: LeafEntry }
   | { arm: "ident"; ident: LeafEntry }
-  | { arm: "number"; number: LeafEntry }
-  | { arm: "string"; string: LeafEntry }
-  | { arm: "paren"; expr: NodeEntry<"Expr"> }
+  | { arm: "is"; assertion: NodeEntry<"Assertion"> }
+  | { arm: "pipe"; block: NodeEntry<"Block"> }
+  | { arm: "paren"; block?: NodeEntry<"Block"> }
+  | { arm: "bracket"; expr?: NodeEntry<"Expr">; expr2?: NodeEntry<"Expr">; expr3?: NodeEntry<"Expr"> }
+  | { arm: "bracket2"; alt: ({ branch: "spread"; expr?: NodeEntry<"Expr"> } | { branch: "expr"; expr: NodeEntry<"Expr"> })[] }
+  | { arm: "brace"; definition: (NodeEntry<"Definition">)[]; property: (NodeEntry<"Property">)[] }
+  | { arm: "dot"; ident: LeafEntry }
+  | { arm: "p46_40"; block?: NodeEntry<"Block"> }
+  | { arm: "p46_91"; block?: NodeEntry<"Block"> }
+  | { arm: "p46_46"; ident: LeafEntry }
+  | { arm: "p46_46_40"; block?: NodeEntry<"Block"> }
+  | { arm: "led_pipe"; left: NodeEntry<"Expr">; block: NodeEntry<"Block"> }
+  | { arm: "led_question"; left: NodeEntry<"Expr">; expr?: NodeEntry<"Expr">; expr2?: NodeEntry<"Expr"> }
+  | { arm: "led_not"; left: NodeEntry<"Expr">; expr: NodeEntry<"Expr"> }
+  | { arm: "led_has"; left: NodeEntry<"Expr">; expr: NodeEntry<"Expr"> }
+  | { arm: "led_is"; left: NodeEntry<"Expr">; assertion: NodeEntry<"Assertion"> }
+  | { arm: "led_asc"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_ascN"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_ascA"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_ascNA"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_ascAN"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_desc"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_descN"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_descA"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_descNA"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_descAN"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
   | { arm: "led_dot"; left: NodeEntry<"Expr">; ident: LeafEntry }
-  | { arm: "led_bracket"; left: NodeEntry<"Expr">; expr: NodeEntry<"Expr"> }
+  | { arm: "led_dot2"; left: NodeEntry<"Expr">; variable: LeafEntry; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_p46_40"; left: NodeEntry<"Expr">; block?: NodeEntry<"Block"> }
+  | { arm: "led_p46_91"; left: NodeEntry<"Expr">; block?: NodeEntry<"Block"> }
+  | { arm: "led_p46_46_40"; left: NodeEntry<"Expr">; block?: NodeEntry<"Block"> }
+  | { arm: "led_p46_46"; left: NodeEntry<"Expr">; ident: LeafEntry }
   | { arm: "led_paren"; left: NodeEntry<"Expr">; expr: (NodeEntry<"Expr">)[] }
+  | { arm: "led_bracket"; left: NodeEntry<"Expr">; expr?: NodeEntry<"Expr">; expr2?: NodeEntry<"Expr">; expr3?: NodeEntry<"Expr"> }
+  | { arm: "led_bracket2"; left: NodeEntry<"Expr">; expr?: NodeEntry<"Expr"> }
   | { arm: "binaryOp"; left: NodeEntry<"Expr">; op: LeafEntry; right: NodeEntry<"Expr"> }
   | { arm: "prefixOp"; op: LeafEntry; operand: NodeEntry<"Expr"> }
   | { arm: "postfixOp"; operand: NodeEntry<"Expr">; op: LeafEntry };
+
+function _Expr$fn(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let fn: (NodeEntry<"Fn">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 3)) return null;
+  fn = __SC[i] as NodeEntry<"Fn">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "fn", fn: fn! };
+}
+
+function _Expr$number(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let number: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 7))) return null;
+  number = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "number", number: number! };
+}
+
+function _Expr$string(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let string: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 8))) return null;
+  string = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "string", string: string! };
+}
+
+function _Expr$regex(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let regex: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 9))) return null;
+  regex = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "regex", regex: regex! };
+}
+
+function _Expr$template(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let template: (LeafEntry | NodeEntry<'$template'>) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 10) || __nodeOf(t, cc, i, 7))) return null;
+  template = __SC[i] as LeafEntry | NodeEntry<'$template'>;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "template", template: template! };
+}
 
 function _Expr$true_(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
   let i = 0;
@@ -114,10 +202,50 @@ function _Expr$Infinity(t: TreeAccess, n: number, cc: number, tb: number, src: s
   return { arm: "Infinity" };
 }
 
+function _Expr$data(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let data: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 14))) return null;
+  data = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "data", data: data! };
+}
+
+function _Expr$context(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let context: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 15))) return null;
+  context = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "context", context: context! };
+}
+
+function _Expr$arg1(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let arg1: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 12))) return null;
+  arg1 = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "arg1", arg1: arg1! };
+}
+
+function _Expr$current(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let current: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 13))) return null;
+  current = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "current", current: current! };
+}
+
 function _Expr$variable(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
   let variable: (LeafEntry) | undefined;
   let i = 0;
-  if (!(__tok(t, cc, tb, i, 7))) return null;
+  if (!(__tok(t, cc, tb, i, 11))) return null;
   variable = __SC[i] as LeafEntry;
   i++;
   if (i !== cc) return null;
@@ -127,45 +255,683 @@ function _Expr$variable(t: TreeAccess, n: number, cc: number, tb: number, src: s
 function _Expr$ident(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
   let ident: (LeafEntry) | undefined;
   let i = 0;
-  if (!(__tok(t, cc, tb, i, 8))) return null;
+  if (!(__tok(t, cc, tb, i, 16))) return null;
   ident = __SC[i] as LeafEntry;
   i++;
   if (i !== cc) return null;
   return { arm: "ident", ident: ident! };
 }
 
-function _Expr$number(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
-  let number: (LeafEntry) | undefined;
+function _Expr$is(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let assertion: (NodeEntry<"Assertion">) | undefined;
   let i = 0;
-  if (!(__tok(t, cc, tb, i, 9))) return null;
-  number = __SC[i] as LeafEntry;
+  if (!__lit(t, cc, tb, i, src, "is", 1)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 2)) return null;
+  assertion = __SC[i] as NodeEntry<"Assertion">;
   i++;
   if (i !== cc) return null;
-  return { arm: "number", number: number! };
+  return { arm: "is", assertion: assertion! };
 }
 
-function _Expr$string(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
-  let string: (LeafEntry) | undefined;
+function _Expr$pipe(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let block: (NodeEntry<"Block">) | undefined;
   let i = 0;
-  if (!(__tok(t, cc, tb, i, 10))) return null;
-  string = __SC[i] as LeafEntry;
+  if (!__lit(t, cc, tb, i, src, "|", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 6)) return null;
+  block = __SC[i] as NodeEntry<"Block">;
   i++;
   if (i !== cc) return null;
-  return { arm: "string", string: string! };
+  return { arm: "pipe", block: block! };
 }
 
 function _Expr$paren(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
-  let expr: (NodeEntry<"Expr">) | undefined;
+  let block: (NodeEntry<"Block">) | undefined;
   let i = 0;
   if (!__lit(t, cc, tb, i, src, "(", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 6)) { _t1 = false; break _b2; }
+      block = __SC[i] as NodeEntry<"Block">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "paren", block };
+}
+
+function _Expr$bracket(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let expr2: (NodeEntry<"Expr">) | undefined;
+  let expr3: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "[", 0)) return null;
+  i++;
+  if (cc - i > 2) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, ":", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t3 = i; let _t4 = true;
+    _b5: {
+      if (!__nodeOf(t, cc, i, 0)) { _t4 = false; break _b5; }
+      expr2 = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t4) i = _t3;
+  }
+  if (cc - i > 1) {
+    const _t6 = i; let _t7 = true;
+    _b8: {
+      if (!__lit(t, cc, tb, i, src, ":", 0)) { _t7 = false; break _b8; }
+      i++;
+      if (cc - i > 1) {
+        const _t9 = i; let _t10 = true;
+        _b11: {
+          if (!__nodeOf(t, cc, i, 0)) { _t10 = false; break _b11; }
+          expr3 = __SC[i] as NodeEntry<"Expr">;
+          i++;
+        }
+        if (!_t10) i = _t9;
+      }
+    }
+    if (!_t7) i = _t6;
+  }
+  if (!__lit(t, cc, tb, i, src, "]", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "bracket", expr, expr2, expr3 };
+}
+
+function _Expr$bracket2(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  const alt: ({ branch: "spread"; expr?: NodeEntry<"Expr"> } | { branch: "expr"; expr: NodeEntry<"Expr"> })[] = [];
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "[", 0)) return null;
+  i++;
+  {
+    const _t0 = i; let _t3 = true;
+    _b4: {
+      {
+        let _t5 = false;
+        if (!_t5) {
+          let _t9_expr: (NodeEntry<"Expr">) | undefined;
+          const _t6 = i; let _t7 = true;
+          _b8: {
+            if (!__lit(t, cc, tb, i, src, "...", 0)) { _t7 = false; break _b8; }
+            i++;
+            if (cc - i > 1) {
+              const _t10 = i; let _t11 = true;
+              _b12: {
+                if (!__nodeOf(t, cc, i, 0)) { _t11 = false; break _b12; }
+                _t9_expr = __SC[i] as NodeEntry<"Expr">;
+                i++;
+              }
+              if (!_t11) i = _t10;
+            }
+          }
+          if (_t7) { _t5 = true; alt.push({ branch: "spread", expr: _t9_expr } as never); }
+          else i = _t6;
+        }
+        if (!_t5) {
+          let _t16_expr: (NodeEntry<"Expr">) | undefined;
+          const _t13 = i; let _t14 = true;
+          _b15: {
+            if (!__nodeOf(t, cc, i, 0)) { _t14 = false; break _b15; }
+            _t16_expr = __SC[i] as NodeEntry<"Expr">;
+            i++;
+          }
+          if (_t14) { _t5 = true; alt.push({ branch: "expr", expr: _t16_expr! } as never); }
+          else i = _t13;
+        }
+        if (!_t5) { _t3 = false; break _b4; }
+      }
+    }
+    if (!_t3) { i = _t0; }
+    else for (;;) {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) break;
+      i++;
+      const _t02 = i; let _t1 = true;
+      _b2: {
+        {
+          let _t17 = false;
+          if (!_t17) {
+            let _t21_expr: (NodeEntry<"Expr">) | undefined;
+            const _t18 = i; let _t19 = true;
+            _b20: {
+              if (!__lit(t, cc, tb, i, src, "...", 0)) { _t19 = false; break _b20; }
+              i++;
+              if (cc - i > 1) {
+                const _t22 = i; let _t23 = true;
+                _b24: {
+                  if (!__nodeOf(t, cc, i, 0)) { _t23 = false; break _b24; }
+                  _t21_expr = __SC[i] as NodeEntry<"Expr">;
+                  i++;
+                }
+                if (!_t23) i = _t22;
+              }
+            }
+            if (_t19) { _t17 = true; alt.push({ branch: "spread", expr: _t21_expr } as never); }
+            else i = _t18;
+          }
+          if (!_t17) {
+            let _t28_expr: (NodeEntry<"Expr">) | undefined;
+            const _t25 = i; let _t26 = true;
+            _b27: {
+              if (!__nodeOf(t, cc, i, 0)) { _t26 = false; break _b27; }
+              _t28_expr = __SC[i] as NodeEntry<"Expr">;
+              i++;
+            }
+            if (_t26) { _t17 = true; alt.push({ branch: "expr", expr: _t28_expr! } as never); }
+            else i = _t25;
+          }
+          if (!_t17) { _t1 = false; break _b2; }
+        }
+      }
+      if (!_t1) { i = _t02; break; }
+    }
+  }
+  if (!__lit(t, cc, tb, i, src, "]", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "bracket2", alt };
+}
+
+function _Expr$brace(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  const definition: (NodeEntry<"Definition">)[] = [];
+  const property: (NodeEntry<"Property">)[] = [];
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "{", 0)) return null;
+  i++;
+  for (;;) {
+    if (cc - i <= 1) break;
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 1)) { _t1 = false; break _b2; }
+      definition.push(__SC[i] as NodeEntry<"Definition">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  {
+    const _t3 = i; let _t6 = true;
+    _b7: {
+      if (!__nodeOf(t, cc, i, 4)) { _t6 = false; break _b7; }
+      property.push(__SC[i] as NodeEntry<"Property">);
+      i++;
+    }
+    if (!_t6) { i = _t3; }
+    else for (;;) {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) break;
+      i++;
+      const _t32 = i; let _t4 = true;
+      _b5: {
+        if (!__nodeOf(t, cc, i, 4)) { _t4 = false; break _b5; }
+        property.push(__SC[i] as NodeEntry<"Property">);
+        i++;
+      }
+      if (!_t4) { i = _t32; break; }
+    }
+  }
+  if (!__lit(t, cc, tb, i, src, "}", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "brace", definition, property };
+}
+
+function _Expr$dot(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let ident: (LeafEntry) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, ".", 0)) return null;
+  i++;
+  if (!(__tok(t, cc, tb, i, 16))) return null;
+  ident = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "dot", ident: ident! };
+}
+
+function _Expr$p46_40(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let block: (NodeEntry<"Block">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, ".(", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 6)) { _t1 = false; break _b2; }
+      block = __SC[i] as NodeEntry<"Block">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "p46_40", block };
+}
+
+function _Expr$p46_91(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let block: (NodeEntry<"Block">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, ".[", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 6)) { _t1 = false; break _b2; }
+      block = __SC[i] as NodeEntry<"Block">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, "]", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "p46_91", block };
+}
+
+function _Expr$p46_46(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let ident: (LeafEntry) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "..", 0)) return null;
+  i++;
+  if (!(__tok(t, cc, tb, i, 16))) return null;
+  ident = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "p46_46", ident: ident! };
+}
+
+function _Expr$p46_46_40(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let block: (NodeEntry<"Block">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "..(", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 6)) { _t1 = false; break _b2; }
+      block = __SC[i] as NodeEntry<"Block">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "p46_46_40", block };
+}
+
+function _Expr$led_pipe(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let block: (NodeEntry<"Block">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "|", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 6)) return null;
+  block = __SC[i] as NodeEntry<"Block">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "led_pipe", left: left!, block: block! };
+}
+
+function _Expr$led_question(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let expr2: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "?", 0)) return null;
+  i++;
+  if (cc - i > 0) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (cc - i > 0) {
+    const _t3 = i; let _t4 = true;
+    _b5: {
+      if (!__lit(t, cc, tb, i, src, ":", 0)) { _t4 = false; break _b5; }
+      i++;
+      if (cc - i > 0) {
+        const _t6 = i; let _t7 = true;
+        _b8: {
+          if (!__nodeOf(t, cc, i, 0)) { _t7 = false; break _b8; }
+          expr2 = __SC[i] as NodeEntry<"Expr">;
+          i++;
+        }
+        if (!_t7) i = _t6;
+      }
+    }
+    if (!_t4) i = _t3;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_question", left: left!, expr, expr2 };
+}
+
+function _Expr$led_not(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "not", 1)) return null;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "in", 1)) return null;
   i++;
   if (!__nodeOf(t, cc, i, 0)) return null;
   expr = __SC[i] as NodeEntry<"Expr">;
   i++;
-  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  if (i !== cc) return null;
+  return { arm: "led_not", left: left!, expr: expr! };
+}
+
+function _Expr$led_has(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "has", 1)) return null;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "no", 1)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  expr = __SC[i] as NodeEntry<"Expr">;
   i++;
   if (i !== cc) return null;
-  return { arm: "paren", expr: expr! };
+  return { arm: "led_has", left: left!, expr: expr! };
+}
+
+function _Expr$led_is(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let assertion: (NodeEntry<"Assertion">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "is", 1)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 2)) return null;
+  assertion = __SC[i] as NodeEntry<"Assertion">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "led_is", left: left!, assertion: assertion! };
+}
+
+function _Expr$led_asc(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "asc", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_asc", left: left!, expr };
+}
+
+function _Expr$led_ascN(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "ascN", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_ascN", left: left!, expr };
+}
+
+function _Expr$led_ascA(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "ascA", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_ascA", left: left!, expr };
+}
+
+function _Expr$led_ascNA(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "ascNA", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_ascNA", left: left!, expr };
+}
+
+function _Expr$led_ascAN(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "ascAN", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_ascAN", left: left!, expr };
+}
+
+function _Expr$led_desc(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "desc", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_desc", left: left!, expr };
+}
+
+function _Expr$led_descN(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "descN", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_descN", left: left!, expr };
+}
+
+function _Expr$led_descA(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "descA", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_descA", left: left!, expr };
+}
+
+function _Expr$led_descNA(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "descNA", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_descNA", left: left!, expr };
+}
+
+function _Expr$led_descAN(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "descAN", 1)) return null;
+  i++;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) { _t1 = false; break _b2; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "led_descAN", left: left!, expr };
 }
 
 function _Expr$led_dot(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
@@ -177,29 +943,140 @@ function _Expr$led_dot(t: TreeAccess, n: number, cc: number, tb: number, src: st
   i++;
   if (!__lit(t, cc, tb, i, src, ".", 0)) return null;
   i++;
-  if (!(__tok(t, cc, tb, i, 8))) return null;
+  if (!(__tok(t, cc, tb, i, 16))) return null;
   ident = __SC[i] as LeafEntry;
   i++;
   if (i !== cc) return null;
   return { arm: "led_dot", left: left!, ident: ident! };
 }
 
-function _Expr$led_bracket(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+function _Expr$led_dot2(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
   let left: (NodeEntry<"Expr">) | undefined;
-  let expr: (NodeEntry<"Expr">) | undefined;
+  let variable: (LeafEntry) | undefined;
+  const expr: (NodeEntry<"Expr">)[] = [];
   let i = 0;
   if (!__nodeOf(t, cc, i, 0)) return null;
   left = __SC[i] as NodeEntry<"Expr">;
   i++;
-  if (!__lit(t, cc, tb, i, src, "[", 0)) return null;
+  if (!__lit(t, cc, tb, i, src, ".", 0)) return null;
   i++;
+  if (!(__tok(t, cc, tb, i, 11))) return null;
+  variable = __SC[i] as LeafEntry;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "(", 0)) return null;
+  i++;
+  {
+    const _t0 = i; let _t3 = true;
+    _b4: {
+      if (!__nodeOf(t, cc, i, 0)) { _t3 = false; break _b4; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t3) { i = _t0; }
+    else for (;;) {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) break;
+      i++;
+      const _t02 = i; let _t1 = true;
+      _b2: {
+        if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+        expr.push(__SC[i] as NodeEntry<"Expr">);
+        i++;
+      }
+      if (!_t1) { i = _t02; break; }
+    }
+  }
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "led_dot2", left: left!, variable: variable!, expr };
+}
+
+function _Expr$led_p46_40(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let block: (NodeEntry<"Block">) | undefined;
+  let i = 0;
   if (!__nodeOf(t, cc, i, 0)) return null;
-  expr = __SC[i] as NodeEntry<"Expr">;
+  left = __SC[i] as NodeEntry<"Expr">;
   i++;
+  if (!__lit(t, cc, tb, i, src, ".(", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 6)) { _t1 = false; break _b2; }
+      block = __SC[i] as NodeEntry<"Block">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "led_p46_40", left: left!, block };
+}
+
+function _Expr$led_p46_91(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let block: (NodeEntry<"Block">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, ".[", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 6)) { _t1 = false; break _b2; }
+      block = __SC[i] as NodeEntry<"Block">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
   if (!__lit(t, cc, tb, i, src, "]", 0)) return null;
   i++;
   if (i !== cc) return null;
-  return { arm: "led_bracket", left: left!, expr: expr! };
+  return { arm: "led_p46_91", left: left!, block };
+}
+
+function _Expr$led_p46_46_40(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let block: (NodeEntry<"Block">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "..(", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 6)) { _t1 = false; break _b2; }
+      block = __SC[i] as NodeEntry<"Block">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "led_p46_46_40", left: left!, block };
+}
+
+function _Expr$led_p46_46(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let ident: (LeafEntry) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "..", 0)) return null;
+  i++;
+  if (!(__tok(t, cc, tb, i, 16))) return null;
+  ident = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "led_p46_46", left: left!, ident: ident! };
 }
 
 function _Expr$led_paren(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
@@ -235,6 +1112,84 @@ function _Expr$led_paren(t: TreeAccess, n: number, cc: number, tb: number, src: 
   i++;
   if (i !== cc) return null;
   return { arm: "led_paren", left: left!, expr };
+}
+
+function _Expr$led_bracket(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let expr2: (NodeEntry<"Expr">) | undefined;
+  let expr3: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "[", 0)) return null;
+  i++;
+  if (cc - i > 2) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, ":", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t3 = i; let _t4 = true;
+    _b5: {
+      if (!__nodeOf(t, cc, i, 0)) { _t4 = false; break _b5; }
+      expr2 = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t4) i = _t3;
+  }
+  if (cc - i > 1) {
+    const _t6 = i; let _t7 = true;
+    _b8: {
+      if (!__lit(t, cc, tb, i, src, ":", 0)) { _t7 = false; break _b8; }
+      i++;
+      if (cc - i > 1) {
+        const _t9 = i; let _t10 = true;
+        _b11: {
+          if (!__nodeOf(t, cc, i, 0)) { _t10 = false; break _b11; }
+          expr3 = __SC[i] as NodeEntry<"Expr">;
+          i++;
+        }
+        if (!_t10) i = _t9;
+      }
+    }
+    if (!_t7) i = _t6;
+  }
+  if (!__lit(t, cc, tb, i, src, "]", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "led_bracket", left: left!, expr, expr2, expr3 };
+}
+
+function _Expr$led_bracket2(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
+  let left: (NodeEntry<"Expr">) | undefined;
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  left = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "[", 0)) return null;
+  i++;
+  if (cc - i > 1) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (!__lit(t, cc, tb, i, src, "]", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "led_bracket2", left: left!, expr };
 }
 
 function _Expr$binaryOp(t: TreeAccess, n: number, cc: number, tb: number, src: string): ExprMatch | null {
@@ -290,6 +1245,10 @@ export function matchExpr(t: TreeAccess, n: NodeEntry<"Expr">, tb: number, src: 
   } else { const e0 = __SC[0];
   if (e0 >= 0) {
     switch (RULE_CANON[t.ruleIdOf(e0)]) {
+      case 7: { // $template
+        { const m = _Expr$template(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
       case 0: { // Expr
         if (cc < 2) {
         } else if ((e1 = __SC[1]) >= 0) {
@@ -306,10 +1265,52 @@ export function matchExpr(t: TreeAccess, n: NodeEntry<"Expr">, tb: number, src: 
             }
             case 46: {
             { const m = _Expr$led_dot(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_dot2(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_p46_40(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_p46_91(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_p46_46_40(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_p46_46(t, n, cc, tb, src); if (m !== null) return m; }
+              break;
+            }
+            case 63: {
+            { const m = _Expr$led_question(t, n, cc, tb, src); if (m !== null) return m; }
               break;
             }
             case 91: {
             { const m = _Expr$led_bracket(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_bracket2(t, n, cc, tb, src); if (m !== null) return m; }
+              break;
+            }
+            case 97: {
+            { const m = _Expr$led_asc(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_ascN(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_ascA(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_ascNA(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_ascAN(t, n, cc, tb, src); if (m !== null) return m; }
+              break;
+            }
+            case 100: {
+            { const m = _Expr$led_desc(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_descN(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_descA(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_descNA(t, n, cc, tb, src); if (m !== null) return m; }
+            { const m = _Expr$led_descAN(t, n, cc, tb, src); if (m !== null) return m; }
+              break;
+            }
+            case 104: {
+            { const m = _Expr$led_has(t, n, cc, tb, src); if (m !== null) return m; }
+              break;
+            }
+            case 105: {
+            { const m = _Expr$led_is(t, n, cc, tb, src); if (m !== null) return m; }
+              break;
+            }
+            case 110: {
+            { const m = _Expr$led_not(t, n, cc, tb, src); if (m !== null) return m; }
+              break;
+            }
+            case 124: {
+            { const m = _Expr$led_pipe(t, n, cc, tb, src); if (m !== null) return m; }
               break;
             }
             default: {
@@ -328,12 +1329,24 @@ export function matchExpr(t: TreeAccess, n: NodeEntry<"Expr">, tb: number, src: 
         }
         break;
       }
+      case 3: { // Fn
+        { const m = _Expr$fn(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
     }
   } else { const _k0 = t.leafKindOf(e0);
   if (_k0 === 1 || (_k0 === 0 && t.leafTokKindOf(e0, tb) === 1)) {
     switch (src.charCodeAt(t.leafOffsetOf(e0, tb))) {
       case 40: {
         { const m = _Expr$paren(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 46: {
+        { const m = _Expr$dot(t, n, cc, tb, src); if (m !== null) return m; }
+        { const m = _Expr$p46_40(t, n, cc, tb, src); if (m !== null) return m; }
+        { const m = _Expr$p46_91(t, n, cc, tb, src); if (m !== null) return m; }
+        { const m = _Expr$p46_46(t, n, cc, tb, src); if (m !== null) return m; }
+        { const m = _Expr$p46_46_40(t, n, cc, tb, src); if (m !== null) return m; }
         break;
       }
       case 73: {
@@ -344,8 +1357,17 @@ export function matchExpr(t: TreeAccess, n: NodeEntry<"Expr">, tb: number, src: 
         { const m = _Expr$NaN(t, n, cc, tb, src); if (m !== null) return m; }
         break;
       }
+      case 91: {
+        { const m = _Expr$bracket(t, n, cc, tb, src); if (m !== null) return m; }
+        { const m = _Expr$bracket2(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
       case 102: {
         { const m = _Expr$false_(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 105: {
+        { const m = _Expr$is(t, n, cc, tb, src); if (m !== null) return m; }
         break;
       }
       case 110: {
@@ -360,24 +1382,56 @@ export function matchExpr(t: TreeAccess, n: NodeEntry<"Expr">, tb: number, src: 
         { const m = _Expr$undefined(t, n, cc, tb, src); if (m !== null) return m; }
         break;
       }
+      case 123: {
+        { const m = _Expr$brace(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 124: {
+        { const m = _Expr$pipe(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
     }
   } else if (_k0 === 2) {
     { const m = _Expr$prefixOp(t, n, cc, tb, src); if (m !== null) return m; }
   } else {
     switch (t.leafTokKindOf(e0, tb)) {
-      case 8: { // Ident
+      case 12: { // Arg1
+        { const m = _Expr$arg1(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 15: { // Context
+        { const m = _Expr$context(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 13: { // Current
+        { const m = _Expr$current(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 14: { // Data
+        { const m = _Expr$data(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 16: { // Ident
         { const m = _Expr$ident(t, n, cc, tb, src); if (m !== null) return m; }
         break;
       }
-      case 9: { // Number
+      case 7: { // Number
         { const m = _Expr$number(t, n, cc, tb, src); if (m !== null) return m; }
         break;
       }
-      case 10: { // String
+      case 9: { // Regex
+        { const m = _Expr$regex(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 8: { // String
         { const m = _Expr$string(t, n, cc, tb, src); if (m !== null) return m; }
         break;
       }
-      case 7: { // Variable
+      case 10: { // Template
+        { const m = _Expr$template(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 11: { // Variable
         { const m = _Expr$variable(t, n, cc, tb, src); if (m !== null) return m; }
         break;
       }
@@ -386,11 +1440,678 @@ export function matchExpr(t: TreeAccess, n: NodeEntry<"Expr">, tb: number, src: 
   throw new Error("matchExpr: no arm matches" + ' @tok' + tb);
 }
 
+export type DefinitionMatch =
+  | { arm: "variable"; alt: { branch: "variable"; variable: LeafEntry } | { branch: "current"; current: LeafEntry }; expr?: NodeEntry<"Expr"> };
+
+function _Definition$variable(t: TreeAccess, n: number, cc: number, tb: number, src: string): DefinitionMatch | null {
+  let alt: ({ branch: "variable"; variable: LeafEntry } | { branch: "current"; current: LeafEntry }) | undefined;
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  {
+    let _t0 = false;
+    if (!_t0) {
+      let _t4_variable: (LeafEntry) | undefined;
+      const _t1 = i; let _t2 = true;
+      _b3: {
+        if (!(__tok(t, cc, tb, i, 11))) { _t2 = false; break _b3; }
+        _t4_variable = __SC[i] as LeafEntry;
+        i++;
+      }
+      if (_t2) { _t0 = true; alt = ({ branch: "variable", variable: _t4_variable! }) as typeof alt; }
+      else i = _t1;
+    }
+    if (!_t0) {
+      let _t8_current: (LeafEntry) | undefined;
+      const _t5 = i; let _t6 = true;
+      _b7: {
+        if (!(__tok(t, cc, tb, i, 13))) { _t6 = false; break _b7; }
+        _t8_current = __SC[i] as LeafEntry;
+        i++;
+      }
+      if (_t6) { _t0 = true; alt = ({ branch: "current", current: _t8_current! }) as typeof alt; }
+      else i = _t5;
+    }
+    if (!_t0) return null;
+  }
+  if (cc - i > 1) {
+    const _t9 = i; let _t10 = true;
+    _b11: {
+      if (!__lit(t, cc, tb, i, src, ":", 0)) { _t10 = false; break _b11; }
+      i++;
+      if (!__nodeOf(t, cc, i, 0)) { _t10 = false; break _b11; }
+      expr = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t10) i = _t9;
+  }
+  if (!__lit(t, cc, tb, i, src, ";", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "variable", alt: alt!, expr };
+}
+
+export function matchDefinition(t: TreeAccess, n: NodeEntry<"Definition">, tb: number, src: string): DefinitionMatch {
+  const cc = __load(t, n);
+  let e1 = 0; let _k1 = 0;
+  if (cc === 0) {
+  } else { const e0 = __SC[0];
+  if (e0 >= 0) {
+    switch (RULE_CANON[t.ruleIdOf(e0)]) {
+    }
+  } else { const _k0 = t.leafKindOf(e0);
+  if (_k0 === 1 || (_k0 === 0 && t.leafTokKindOf(e0, tb) === 1)) {
+    switch (src.charCodeAt(t.leafOffsetOf(e0, tb))) {
+    }
+  } else if (_k0 === 2) {
+  } else {
+    switch (t.leafTokKindOf(e0, tb)) {
+      case 13: { // Current
+        { const m = _Definition$variable(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 11: { // Variable
+        { const m = _Definition$variable(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } } }
+  throw new Error("matchDefinition: no arm matches" + ' @tok' + tb);
+}
+
+export type AssertionMatch =
+  | { arm: "not"; assertion: NodeEntry<"Assertion"> }
+  | { arm: "ident"; ident: LeafEntry }
+  | { arm: "true_" }
+  | { arm: "false_" }
+  | { arm: "null_" }
+  | { arm: "undefined" }
+  | { arm: "NaN" }
+  | { arm: "Infinity" }
+  | { arm: "variable"; variable: LeafEntry }
+  | { arm: "paren"; assertion: NodeEntry<"Assertion">; andKw: ("and" | "or")[]; assertion2: (NodeEntry<"Assertion">)[] };
+
+function _Assertion$not(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let assertion: (NodeEntry<"Assertion">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "not", 1)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 2)) return null;
+  assertion = __SC[i] as NodeEntry<"Assertion">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "not", assertion: assertion! };
+}
+
+function _Assertion$ident(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let ident: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 16))) return null;
+  ident = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "ident", ident: ident! };
+}
+
+function _Assertion$true_(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "true", 1)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "true_" };
+}
+
+function _Assertion$false_(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "false", 1)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "false_" };
+}
+
+function _Assertion$null_(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "null", 1)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "null_" };
+}
+
+function _Assertion$undefined(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "undefined", 1)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "undefined" };
+}
+
+function _Assertion$NaN(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "NaN", 1)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "NaN" };
+}
+
+function _Assertion$Infinity(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "Infinity", 1)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "Infinity" };
+}
+
+function _Assertion$variable(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let variable: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 11))) return null;
+  variable = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "variable", variable: variable! };
+}
+
+function _Assertion$paren(t: TreeAccess, n: number, cc: number, tb: number, src: string): AssertionMatch | null {
+  let assertion: (NodeEntry<"Assertion">) | undefined;
+  const andKw: ("and" | "or")[] = [];
+  const assertion2: (NodeEntry<"Assertion">)[] = [];
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "(", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 2)) return null;
+  assertion = __SC[i] as NodeEntry<"Assertion">;
+  i++;
+  for (;;) {
+    if (cc - i <= 1) break;
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!(__lit(t, cc, tb, i, src, "and", 1) || __lit(t, cc, tb, i, src, "or", 1))) { _t1 = false; break _b2; }
+      andKw.push(src.slice(t.leafOffsetOf(__SC[i], tb), t.leafEndOf(__SC[i], tb)) as "and" | "or");
+      i++;
+      if (!__nodeOf(t, cc, i, 2)) { _t1 = false; break _b2; }
+      assertion2.push(__SC[i] as NodeEntry<"Assertion">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "paren", assertion: assertion!, andKw, assertion2 };
+}
+
+export function matchAssertion(t: TreeAccess, n: NodeEntry<"Assertion">, tb: number, src: string): AssertionMatch {
+  const cc = __load(t, n);
+  let e1 = 0; let _k1 = 0;
+  if (cc === 0) {
+  } else { const e0 = __SC[0];
+  if (e0 >= 0) {
+    switch (RULE_CANON[t.ruleIdOf(e0)]) {
+    }
+  } else { const _k0 = t.leafKindOf(e0);
+  if (_k0 === 1 || (_k0 === 0 && t.leafTokKindOf(e0, tb) === 1)) {
+    switch (src.charCodeAt(t.leafOffsetOf(e0, tb))) {
+      case 40: {
+        { const m = _Assertion$paren(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 73: {
+        { const m = _Assertion$Infinity(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 78: {
+        { const m = _Assertion$NaN(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 102: {
+        { const m = _Assertion$false_(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 110: {
+        { const m = _Assertion$not(t, n, cc, tb, src); if (m !== null) return m; }
+        { const m = _Assertion$null_(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 116: {
+        { const m = _Assertion$true_(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 117: {
+        { const m = _Assertion$undefined(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } else if (_k0 === 2) {
+  } else {
+    switch (t.leafTokKindOf(e0, tb)) {
+      case 16: { // Ident
+        { const m = _Assertion$ident(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 11: { // Variable
+        { const m = _Assertion$variable(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } } }
+  throw new Error("matchAssertion: no arm matches" + ' @tok' + tb);
+}
+
+export type FnMatch =
+  | { arm: "arrow"; expr: NodeEntry<"Expr"> }
+  | { arm: "variable"; variable: LeafEntry; expr: NodeEntry<"Expr"> }
+  | { arm: "paren"; expr: NodeEntry<"Expr"> }
+  | { arm: "paren2"; variable: (LeafEntry)[]; expr: NodeEntry<"Expr"> };
+
+function _Fn$arrow(t: TreeAccess, n: number, cc: number, tb: number, src: string): FnMatch | null {
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "=>", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  expr = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "arrow", expr: expr! };
+}
+
+function _Fn$variable(t: TreeAccess, n: number, cc: number, tb: number, src: string): FnMatch | null {
+  let variable: (LeafEntry) | undefined;
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 11))) return null;
+  variable = __SC[i] as LeafEntry;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "=>", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  expr = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "variable", variable: variable!, expr: expr! };
+}
+
+function _Fn$paren(t: TreeAccess, n: number, cc: number, tb: number, src: string): FnMatch | null {
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "(", 0)) return null;
+  i++;
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "=>", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  expr = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "paren", expr: expr! };
+}
+
+function _Fn$paren2(t: TreeAccess, n: number, cc: number, tb: number, src: string): FnMatch | null {
+  const variable: (LeafEntry)[] = [];
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "(", 0)) return null;
+  i++;
+  {
+    const _t0 = i; let _t3 = true;
+    _b4: {
+      if (!(__tok(t, cc, tb, i, 11))) { _t3 = false; break _b4; }
+      variable.push(__SC[i] as LeafEntry);
+      i++;
+    }
+    if (!_t3) { i = _t0; }
+    else for (;;) {
+      if (!__lit(t, cc, tb, i, src, ",", 0)) break;
+      i++;
+      const _t02 = i; let _t1 = true;
+      _b2: {
+        if (!(__tok(t, cc, tb, i, 11))) { _t1 = false; break _b2; }
+        variable.push(__SC[i] as LeafEntry);
+        i++;
+      }
+      if (!_t1) { i = _t02; break; }
+    }
+  }
+  if (!__lit(t, cc, tb, i, src, ")", 0)) return null;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "=>", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  expr = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "paren2", variable, expr: expr! };
+}
+
+export function matchFn(t: TreeAccess, n: NodeEntry<"Fn">, tb: number, src: string): FnMatch {
+  const cc = __load(t, n);
+  let e1 = 0; let _k1 = 0;
+  if (cc === 0) {
+  } else { const e0 = __SC[0];
+  if (e0 >= 0) {
+    switch (RULE_CANON[t.ruleIdOf(e0)]) {
+    }
+  } else { const _k0 = t.leafKindOf(e0);
+  if (_k0 === 1 || (_k0 === 0 && t.leafTokKindOf(e0, tb) === 1)) {
+    switch (src.charCodeAt(t.leafOffsetOf(e0, tb))) {
+      case 40: {
+        { const m = _Fn$paren(t, n, cc, tb, src); if (m !== null) return m; }
+        { const m = _Fn$paren2(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 61: {
+        { const m = _Fn$arrow(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } else if (_k0 === 2) {
+  } else {
+    switch (t.leafTokKindOf(e0, tb)) {
+      case 11: { // Variable
+        { const m = _Fn$variable(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } } }
+  throw new Error("matchFn: no arm matches" + ' @tok' + tb);
+}
+
+export type PropertyMatch =
+  | { arm: "spread"; expr?: NodeEntry<"Expr"> }
+  | { arm: "bracket"; expr: NodeEntry<"Expr">; expr2: NodeEntry<"Expr"> }
+  | { arm: "propertyKey"; propertyKey: NodeEntry<"PropertyKey">; expr: NodeEntry<"Expr"> }
+  | { arm: "expr"; expr: (NodeEntry<"Expr">)[] };
+
+function _Property$spread(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyMatch | null {
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "...", 0)) return null;
+  i++;
+  if (cc - i > 0) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t1) i = _t0;
+  }
+  if (i !== cc) return null;
+  return { arm: "spread", expr };
+}
+
+function _Property$bracket(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyMatch | null {
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let expr2: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__lit(t, cc, tb, i, src, "[", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  expr = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, "]", 0)) return null;
+  i++;
+  if (!__lit(t, cc, tb, i, src, ":", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  expr2 = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "bracket", expr: expr!, expr2: expr2! };
+}
+
+function _Property$propertyKey(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyMatch | null {
+  let propertyKey: (NodeEntry<"PropertyKey">) | undefined;
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  if (!__nodeOf(t, cc, i, 5)) return null;
+  propertyKey = __SC[i] as NodeEntry<"PropertyKey">;
+  i++;
+  if (!__lit(t, cc, tb, i, src, ":", 0)) return null;
+  i++;
+  if (!__nodeOf(t, cc, i, 0)) return null;
+  expr = __SC[i] as NodeEntry<"Expr">;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "propertyKey", propertyKey: propertyKey!, expr: expr! };
+}
+
+function _Property$expr(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyMatch | null {
+  const expr: (NodeEntry<"Expr">)[] = [];
+  let i = 0;
+  {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 0)) { _t1 = false; break _b2; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t1) return null;
+  }
+  for (;;) {
+    const _t3 = i; let _t4 = true;
+    _b5: {
+      if (!__nodeOf(t, cc, i, 0)) { _t4 = false; break _b5; }
+      expr.push(__SC[i] as NodeEntry<"Expr">);
+      i++;
+    }
+    if (!_t4) { i = _t3; break; }
+    if (i === _t3) break;
+  }
+  if (i !== cc) return null;
+  return { arm: "expr", expr };
+}
+
+export function matchProperty(t: TreeAccess, n: NodeEntry<"Property">, tb: number, src: string): PropertyMatch {
+  const cc = __load(t, n);
+  let e1 = 0; let _k1 = 0;
+  if (cc === 0) {
+  } else { const e0 = __SC[0];
+  if (e0 >= 0) {
+    switch (RULE_CANON[t.ruleIdOf(e0)]) {
+      case 0: { // Expr
+        { const m = _Property$expr(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 5: { // PropertyKey
+        { const m = _Property$propertyKey(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } else { const _k0 = t.leafKindOf(e0);
+  if (_k0 === 1 || (_k0 === 0 && t.leafTokKindOf(e0, tb) === 1)) {
+    switch (src.charCodeAt(t.leafOffsetOf(e0, tb))) {
+      case 46: {
+        { const m = _Property$spread(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 91: {
+        { const m = _Property$bracket(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } else if (_k0 === 2) {
+  } else {
+    switch (t.leafTokKindOf(e0, tb)) {
+    }
+  } } }
+  throw new Error("matchProperty: no arm matches" + ' @tok' + tb);
+}
+
+export type PropertyKeyMatch =
+  | { arm: "ident"; ident: LeafEntry }
+  | { arm: "string"; string: LeafEntry }
+  | { arm: "number"; number: LeafEntry }
+  | { arm: "variable"; variable: LeafEntry }
+  | { arm: "current"; current: LeafEntry };
+
+function _PropertyKey$ident(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyKeyMatch | null {
+  let ident: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 16))) return null;
+  ident = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "ident", ident: ident! };
+}
+
+function _PropertyKey$string(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyKeyMatch | null {
+  let string: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 8))) return null;
+  string = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "string", string: string! };
+}
+
+function _PropertyKey$number(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyKeyMatch | null {
+  let number: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 7))) return null;
+  number = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "number", number: number! };
+}
+
+function _PropertyKey$variable(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyKeyMatch | null {
+  let variable: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 11))) return null;
+  variable = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "variable", variable: variable! };
+}
+
+function _PropertyKey$current(t: TreeAccess, n: number, cc: number, tb: number, src: string): PropertyKeyMatch | null {
+  let current: (LeafEntry) | undefined;
+  let i = 0;
+  if (!(__tok(t, cc, tb, i, 13))) return null;
+  current = __SC[i] as LeafEntry;
+  i++;
+  if (i !== cc) return null;
+  return { arm: "current", current: current! };
+}
+
+export function matchPropertyKey(t: TreeAccess, n: NodeEntry<"PropertyKey">, tb: number, src: string): PropertyKeyMatch {
+  const cc = __load(t, n);
+  let e1 = 0; let _k1 = 0;
+  if (cc === 0) {
+  } else { const e0 = __SC[0];
+  if (e0 >= 0) {
+    switch (RULE_CANON[t.ruleIdOf(e0)]) {
+    }
+  } else { const _k0 = t.leafKindOf(e0);
+  if (_k0 === 1 || (_k0 === 0 && t.leafTokKindOf(e0, tb) === 1)) {
+    switch (src.charCodeAt(t.leafOffsetOf(e0, tb))) {
+    }
+  } else if (_k0 === 2) {
+  } else {
+    switch (t.leafTokKindOf(e0, tb)) {
+      case 13: { // Current
+        { const m = _PropertyKey$current(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 16: { // Ident
+        { const m = _PropertyKey$ident(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 7: { // Number
+        { const m = _PropertyKey$number(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 8: { // String
+        { const m = _PropertyKey$string(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 11: { // Variable
+        { const m = _PropertyKey$variable(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } } }
+  throw new Error("matchPropertyKey: no arm matches" + ' @tok' + tb);
+}
+
+export type BlockMatch =
+  | { arm: "definition"; definition: (NodeEntry<"Definition">)[]; expr?: NodeEntry<"Expr"> };
+
+function _Block$definition(t: TreeAccess, n: number, cc: number, tb: number, src: string): BlockMatch | null {
+  const definition: (NodeEntry<"Definition">)[] = [];
+  let expr: (NodeEntry<"Expr">) | undefined;
+  let i = 0;
+  for (;;) {
+    const _t0 = i; let _t1 = true;
+    _b2: {
+      if (!__nodeOf(t, cc, i, 1)) { _t1 = false; break _b2; }
+      definition.push(__SC[i] as NodeEntry<"Definition">);
+      i++;
+    }
+    if (!_t1) { i = _t0; break; }
+    if (i === _t0) break;
+  }
+  if (cc - i > 0) {
+    const _t3 = i; let _t4 = true;
+    _b5: {
+      if (!__nodeOf(t, cc, i, 0)) { _t4 = false; break _b5; }
+      expr = __SC[i] as NodeEntry<"Expr">;
+      i++;
+    }
+    if (!_t4) i = _t3;
+  }
+  if (i !== cc) return null;
+  return { arm: "definition", definition, expr };
+}
+
+export function matchBlock(t: TreeAccess, n: NodeEntry<"Block">, tb: number, src: string): BlockMatch {
+  const cc = __load(t, n);
+  let e1 = 0; let _k1 = 0;
+  if (cc === 0) {
+    { const m = _Block$definition(t, n, cc, tb, src); if (m !== null) return m; }
+  } else { const e0 = __SC[0];
+  if (e0 >= 0) {
+    switch (RULE_CANON[t.ruleIdOf(e0)]) {
+      case 1: { // Definition
+        { const m = _Block$definition(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+      case 0: { // Expr
+        { const m = _Block$definition(t, n, cc, tb, src); if (m !== null) return m; }
+        break;
+      }
+    }
+  } else { const _k0 = t.leafKindOf(e0);
+  if (_k0 === 1 || (_k0 === 0 && t.leafTokKindOf(e0, tb) === 1)) {
+    switch (src.charCodeAt(t.leafOffsetOf(e0, tb))) {
+    }
+  } else if (_k0 === 2) {
+  } else {
+    switch (t.leafTokKindOf(e0, tb)) {
+    }
+  } } }
+  throw new Error("matchBlock: no arm matches" + ' @tok' + tb);
+}
+
 /** rule name → its matcher (generic walking; the totality gate uses this). */
 export const MATCHERS: Record<string, (t: TreeAccess, n: never, tb: number, src: string) => { arm: string }> = {
   "Expr": matchExpr,
+  "Definition": matchDefinition,
+  "Assertion": matchAssertion,
+  "Fn": matchFn,
+  "Property": matchProperty,
+  "PropertyKey": matchPropertyKey,
+  "Block": matchBlock,
 };
 /** rule ID → matcher (the emitted parser's rowRule ids — declaration order). */
 export const MATCHERS_BY_ID: ((t: TreeAccess, n: never, tb: number, src: string) => { arm: string })[] = [
   matchExpr,
+  matchDefinition,
+  matchAssertion,
+  matchFn,
+  matchProperty,
+  matchPropertyKey,
+  matchBlock,
 ];

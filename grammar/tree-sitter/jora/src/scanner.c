@@ -13,7 +13,8 @@
 #include <wctype.h>
 
 enum TokenType {
-  NO_EXTERNAL_TOKENS,
+  REGEX_LITERAL,
+  TEMPLATE_CHARS,
 };
 
 // The scanner is stateless — tree-sitter's `valid_symbols` already encodes
@@ -42,9 +43,106 @@ void tree_sitter_jora_external_scanner_deserialize(void *payload, const char *bu
 static inline void advance(TSLexer *lexer) { lexer->advance(lexer, false); }
 static inline void skip(TSLexer *lexer) { lexer->advance(lexer, true); }
 
+// ── Regex-literal scan ──────────────────────────────────────────
+// `/` is a regex literal ONLY in expression-start position. tree-sitter
+// gives us `valid_symbols`: it asks for the regex token exactly where the
+// grammar permits it (i.e. NOT after a value/`)`/`]`), so the bulk of the
+// regex-vs-division decision is already made by the LR context. We only
+// need to scan the literal body here.
+//
+// Regex flag characters (derived from the token pattern): "gimsu"
+// Division-after texts (informational; LR ctx handles these): ) ] } . true false null undefined NaN Infinity
+static bool scan_regex(TSLexer *lexer) {
+  if (lexer->lookahead != '/') return false;
+  advance(lexer); // consume opening /
+  // Empty regex `//` is actually a comment — bail so the lexer matches that.
+  if (lexer->lookahead == '/' || lexer->lookahead == '*') return false;
+  bool in_class = false;
+  for (;;) {
+    int32_t c = lexer->lookahead;
+    if (c == 0 || c == '\n') return false; // unterminated
+    if (c == '\\') { advance(lexer); if (lexer->lookahead == 0) return false; advance(lexer); continue; }
+    if (c == '[') { in_class = true; advance(lexer); continue; }
+    if (c == ']') { in_class = false; advance(lexer); continue; }
+    if (c == '/' && !in_class) { advance(lexer); break; }
+    advance(lexer);
+  }
+  // Trailing flag characters.
+  const char *flags = "gimsu";
+  while (lexer->lookahead != 0 && strchr(flags, (char)lexer->lookahead) != NULL) advance(lexer);
+  lexer->result_symbol = REGEX_LITERAL;
+  lexer->mark_end(lexer);
+  return true;
+}
+
+// ── Template-literal scan ───────────────────────────────────────
+// Scans the literal run of characters inside a template, stopping just
+// before the closing delimiter or before an interpolation hole, so a
+// `${ … }` hole re-enters the expression grammar (mirrors gen-lexer.ts's
+// scanTemplateSpan). The closing delimiter, the hole opener, and the hole
+// closer are ordinary anonymous tokens matched by the CFG.
+//
+// Template delimiters (derived from the grammar's template hint):
+//   open        = "`"
+//   interpOpen  = "${"
+//   interpClose = "}"
+static bool scan_template_chars(TSLexer *lexer) {
+  const char open[] = {'`'};
+  bool has_content = false;
+  for (;;) {
+    // Freeze the token end here; any char we merely PEEK past below (a hole
+    // opener) is then excluded from the emitted token.
+    lexer->mark_end(lexer);
+    int32_t c = lexer->lookahead;
+    if (c == 0) return false; // EOF — let the CFG report the unterminated template
+    // Closing delimiter: stop before it (it is an anonymous token).
+    if (c == open[0]) break;
+    // Interpolation hole opener (interpOpen "${").
+    if (c == '$') {
+      advance(lexer); // past the opener's first char (peek)
+      if (lexer->lookahead == '{') break; // a real hole opener
+      has_content = true; // lone first char → literal text, keep scanning
+      continue;
+    }
+    // Backslash escape: consume `\` + next so an escaped delimiter stays literal.
+    if (c == '\\') {
+      advance(lexer);
+      if (lexer->lookahead != 0) advance(lexer);
+      has_content = true;
+      continue;
+    }
+    advance(lexer);
+    has_content = true;
+  }
+  if (!has_content) return false; // zero-width: let `${` / closing delimiter match
+  lexer->result_symbol = TEMPLATE_CHARS;
+  return true; // token end already frozen by the last mark_end
+}
+
 bool tree_sitter_jora_external_scanner_scan(void *payload, TSLexer *lexer,
                                                           const bool *valid_symbols) {
   (void)payload;
+
+  // Error-recovery sentinel: tree-sitter marks EVERY external valid when it is
+  // guessing. The regex slot (expression start) and a template-chars slot
+  // (inside a template) are never both genuinely valid at once, so treat that
+  // combination as recovery and decline — the regular lexer takes over.
+  if (valid_symbols[TEMPLATE_CHARS] && valid_symbols[REGEX_LITERAL]) return false;
+
+  // Template chars run first: whitespace INSIDE a template is literal text,
+  // so it must NOT be skipped (unlike the regex path below).
+  if (valid_symbols[TEMPLATE_CHARS]) {
+    if (scan_template_chars(lexer)) return true;
+  }
+
+  // Skip leading whitespace (the regular lexer normally does this, but the
+  // external scanner runs first when any external symbol is valid).
+  if (valid_symbols[REGEX_LITERAL]) {
+    while (iswspace(lexer->lookahead)) skip(lexer);
+    if (lexer->lookahead == '/') {
+      if (scan_regex(lexer)) return true;
+    }
+  }
 
   return false;
 }

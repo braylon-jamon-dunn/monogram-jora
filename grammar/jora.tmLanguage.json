@@ -10,16 +10,31 @@
       "include": "#blockcomment"
     },
     {
+      "include": "#regex-literal"
+    },
+    {
       "include": "#string"
     },
     {
+      "include": "#template"
+    },
+    {
       "include": "#object-method-key"
+    },
+    {
+      "include": "#arrow-function-params"
+    },
+    {
+      "include": "#ternary-expression"
     },
     {
       "include": "#number"
     },
     {
       "include": "#scope-keyword-operator-logical"
+    },
+    {
+      "include": "#scope-keyword-operator-sort"
     },
     {
       "include": "#scope-constant-language-boolean-true"
@@ -34,7 +49,25 @@
       "include": "#scope-constant-language"
     },
     {
+      "include": "#arg1"
+    },
+    {
+      "include": "#current"
+    },
+    {
+      "include": "#data"
+    },
+    {
+      "include": "#context"
+    },
+    {
       "include": "#method-call"
+    },
+    {
+      "include": "#known-property-access-0"
+    },
+    {
+      "include": "#known-property-access-1"
     },
     {
       "include": "#property-access"
@@ -52,7 +85,22 @@
       "include": "#scope-punctuation-bracket-square"
     },
     {
+      "include": "#scope-punctuation-separator-key-value"
+    },
+    {
       "include": "#scope-punctuation-separator-comma"
+    },
+    {
+      "include": "#scope-punctuation-bracket-curly"
+    },
+    {
+      "include": "#scope-punctuation-terminator-statement"
+    },
+    {
+      "include": "#punctuation"
+    },
+    {
+      "include": "#arrow-parameter"
     },
     {
       "include": "#function-call"
@@ -65,33 +113,270 @@
     }
   ],
   "repository": {
+    "regex-literal": {
+      "name": "string.regexp.jora",
+      "begin": "(?:(?<=[=<>+\\-*%|(\\[:,{.?;])|(?<=\\bis)|(?<=\\bin)|(?<=\\bno)|(?<=\\bnot)|(?<=\\band)|(?<=\\bor)|(?<=^))\\s*(/)(?![/*])",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.begin.regexp.jora"
+        }
+      },
+      "end": "(/)([gimsu]*)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.end.regexp.jora"
+        },
+        "2": {
+          "name": "keyword.other.regexp.jora"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#regexp"
+        }
+      ]
+    },
+    "regexp": {
+      "patterns": [
+        {
+          "name": "keyword.control.anchor.regexp",
+          "match": "\\\\[bB]|\\^|\\$"
+        },
+        {
+          "match": "\\\\[1-9]\\d*|\\\\k<([a-zA-Z_$][\\w$]*)>",
+          "captures": {
+            "0": {
+              "name": "keyword.other.back-reference.regexp"
+            },
+            "1": {
+              "name": "variable.other.regexp"
+            }
+          }
+        },
+        {
+          "name": "keyword.operator.quantifier.regexp",
+          "match": "[?+*]|\\{(\\d+,\\d+|\\d+,|,\\d+|\\d+)\\}\\??"
+        },
+        {
+          "name": "keyword.operator.or.regexp",
+          "match": "\\|"
+        },
+        {
+          "name": "meta.group.assertion.regexp",
+          "begin": "(\\()((\\?=)|(\\?!)|(\\?<=)|(\\?<!))",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp"
+            },
+            "2": {
+              "name": "punctuation.definition.group.assertion.regexp"
+            },
+            "3": {
+              "name": "meta.assertion.look-ahead.regexp"
+            },
+            "4": {
+              "name": "meta.assertion.negative-look-ahead.regexp"
+            },
+            "5": {
+              "name": "meta.assertion.look-behind.regexp"
+            },
+            "6": {
+              "name": "meta.assertion.negative-look-behind.regexp"
+            }
+          },
+          "end": "(\\))",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#regexp"
+            }
+          ]
+        },
+        {
+          "name": "meta.group.regexp",
+          "begin": "\\((?:(\\?:)|(?:\\?<([a-zA-Z_$][\\w$]*)>))?",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.group.regexp"
+            },
+            "1": {
+              "name": "punctuation.definition.group.no-capture.regexp"
+            },
+            "2": {
+              "name": "variable.other.regexp"
+            }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.group.regexp"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#regexp"
+            }
+          ]
+        },
+        {
+          "name": "constant.other.character-class.set.regexp",
+          "begin": "(\\[)(\\^)?",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.character-class.regexp"
+            },
+            "2": {
+              "name": "keyword.operator.negation.regexp"
+            }
+          },
+          "end": "(\\])",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.character-class.regexp"
+            }
+          },
+          "patterns": [
+            {
+              "name": "constant.other.character-class.range.regexp",
+              "match": "(?:.|(\\\\(?:[0-7]{3}|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}))|(\\\\c[A-Z])|(\\\\.))\\-(?:[^\\]\\\\]|(\\\\(?:[0-7]{3}|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}))|(\\\\c[A-Z])|(\\\\.))",
+              "captures": {
+                "1": {
+                  "name": "constant.character.numeric.regexp"
+                },
+                "2": {
+                  "name": "constant.character.control.regexp"
+                },
+                "3": {
+                  "name": "constant.character.escape.backslash.regexp"
+                },
+                "4": {
+                  "name": "constant.character.numeric.regexp"
+                },
+                "5": {
+                  "name": "constant.character.control.regexp"
+                },
+                "6": {
+                  "name": "constant.character.escape.backslash.regexp"
+                }
+              }
+            },
+            {
+              "include": "#regex-character-class"
+            }
+          ]
+        },
+        {
+          "include": "#regex-character-class"
+        }
+      ]
+    },
+    "regex-character-class": {
+      "patterns": [
+        {
+          "name": "constant.other.character-class.regexp",
+          "match": "\\\\[wWsSdDtrnvf]|\\."
+        },
+        {
+          "name": "constant.character.numeric.regexp",
+          "match": "\\\\([0-7]{3}|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4})"
+        },
+        {
+          "name": "constant.character.control.regexp",
+          "match": "\\\\c[A-Z]"
+        },
+        {
+          "name": "constant.character.escape.backslash.regexp",
+          "match": "\\\\."
+        }
+      ]
+    },
     "linecomment": {
       "name": "comment.line.double-slash.jora.jora",
-      "match": "//[^\\n]*"
+      "match": "//[^\\n\\r\\u2028\\u2029]*"
     },
     "blockcomment": {
       "name": "comment.block.jora.jora",
-      "begin": "/\\*",
-      "end": "\\**\\*/"
-    },
-    "variable": {
-      "name": "variable.other.jora.jora",
-      "match": "\\$[a-zA-Z0-9_]*"
-    },
-    "ident": {
-      "name": "variable.other.readwrite.jora",
-      "match": "[a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*"
+      "match": "/\\*(?:[^*]|\\*(?!/))*(?:\\*+/)?"
     },
     "number": {
       "name": "constant.numeric.jora.jora",
-      "match": "[0-9]+(?:\\.[0-9]+)?(?:[eE][+\\-]?[0-9]+)?"
+      "match": "0[xX][0-9a-fA-F_]+|(?:[0-9_]*\\.)?[0-9_]+(?:[eE][+\\-]?[0-9_]+)?"
     },
     "string": {
       "name": "string.quoted.double.jora",
-      "match": "\"(?:[^\"\\\\\\n]|\\\\[^\\n])*\"|'(?:[^'\\\\\\n]|\\\\[^\\n])*'"
+      "match": "\"(?:[^\"\\\\]|\\\\[\\s\\S])*\"|'(?:[^'\\\\]|\\\\[\\s\\S])*'"
+    },
+    "template": {
+      "name": "string.quoted.other.template.jora",
+      "begin": "`",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.template.begin.jora"
+        }
+      },
+      "end": "`",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.template.end.jora"
+        }
+      },
+      "patterns": [
+        {
+          "match": "\\\\.",
+          "name": "constant.character.escape.jora"
+        },
+        {
+          "begin": "\\$\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.template-expression.begin.jora"
+            }
+          },
+          "end": "\\}",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.template-expression.end.jora"
+            }
+          },
+          "name": "meta.embedded.expression.jora",
+          "patterns": [
+            {
+              "include": "$self"
+            }
+          ]
+        }
+      ]
+    },
+    "variable": {
+      "name": "variable.other.jora.jora",
+      "match": "\\$(?:[a-zA-Z_]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$]|\\\\u[0-9a-fA-F]{4})*"
+    },
+    "arg1": {
+      "name": "variable.language.jora.jora",
+      "match": "\\$\\$"
+    },
+    "current": {
+      "name": "variable.language.jora.jora",
+      "match": "\\$"
+    },
+    "data": {
+      "name": "variable.language.jora.jora",
+      "match": "@"
+    },
+    "context": {
+      "name": "variable.language.jora.jora",
+      "match": "#"
+    },
+    "ident": {
+      "name": "variable.other.readwrite.jora",
+      "match": "(?:[a-zA-Z_\\p{L}\\p{Nl}]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]|\\\\u[0-9a-fA-F]{4})*"
     },
     "function-call": {
-      "match": "([a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*)(?=\\s*\\()",
+      "match": "((?:[a-zA-Z_\\p{L}\\p{Nl}]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]|\\\\u[0-9a-fA-F]{4})*)(?=\\s*\\()",
       "captures": {
         "1": {
           "name": "entity.name.function.jora"
@@ -99,7 +384,7 @@
       }
     },
     "object-method-key": {
-      "match": "([a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*)(?=\\s*:\\s*(?:\\w+\\s+)?[\\(])",
+      "match": "((?:[a-zA-Z_\\p{L}\\p{Nl}]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]|\\\\u[0-9a-fA-F]{4})*)(?=\\s*:\\s*(?:\\w+\\s+)?[\\(])",
       "captures": {
         "1": {
           "name": "entity.name.function.jora"
@@ -107,7 +392,7 @@
       }
     },
     "method-call": {
-      "match": "(?<=[\\w\\]\\)])(\\.)\\s*([a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*)(?=\\s*\\()",
+      "match": "(?<=[\\w$\\]\\)])(\\.)\\s*((?:[a-zA-Z_\\p{L}\\p{Nl}]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]|\\\\u[0-9a-fA-F]{4})*)(?=\\s*\\()",
       "captures": {
         "1": {
           "name": "punctuation.accessor.jora"
@@ -117,8 +402,30 @@
         }
       }
     },
+    "known-property-access-0": {
+      "match": "(?<=[\\w$\\]\\)])(\\.)\\s*(\\.\\.)\\b",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor.jora"
+        },
+        "2": {
+          "name": "keyword.operator.spread.jora"
+        }
+      }
+    },
+    "known-property-access-1": {
+      "match": "(?<=[\\w$\\]\\)])(\\.)\\s*(\\.|\\(|\\[|\\.\\()\\b",
+      "captures": {
+        "1": {
+          "name": "punctuation.accessor.jora"
+        },
+        "2": {
+          "name": "punctuation.accessor.jora"
+        }
+      }
+    },
     "property-access": {
-      "match": "(?<=[\\w\\]\\)])(\\.)\\s*([a-zA-Z_\\p{L}\\p{Nl}][a-zA-Z0-9_\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]*)",
+      "match": "(?<=[\\w$\\]\\)])(\\.)\\s*((?:[a-zA-Z_\\p{L}\\p{Nl}]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]|\\\\u[0-9a-fA-F]{4})*)",
       "captures": {
         "1": {
           "name": "punctuation.accessor.jora"
@@ -127,6 +434,71 @@
           "name": "entity.other.property.jora"
         }
       }
+    },
+    "arrow-parameter": {
+      "match": "\\b((?:[a-zA-Z_\\p{L}\\p{Nl}]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]|\\\\u[0-9a-fA-F]{4})*)\\s*(?==>)",
+      "captures": {
+        "1": {
+          "name": "variable.parameter.jora"
+        }
+      }
+    },
+    "arrow-function-params": {
+      "name": "meta.parameters.arrow.jora",
+      "begin": "(\\()(?=[^()]*\\)\\s*(?::\\s*[^=>{]*)?\\s*=>)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.parameters.begin.jora"
+        }
+      },
+      "end": "(\\))",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.parameters.end.jora"
+        }
+      },
+      "patterns": [
+        {
+          "match": "(?<=[,(])\\s*(\\.\\.\\.)?\\s*((?:[a-zA-Z_\\p{L}\\p{Nl}]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}]|\\\\u[0-9a-fA-F]{4})*)(?=\\s*[,:)?=])",
+          "captures": {
+            "1": {
+              "name": "keyword.operator.spread.jora"
+            },
+            "2": {
+              "name": "variable.parameter.jora"
+            }
+          }
+        },
+        {
+          "include": "#nested-parens"
+        },
+        {
+          "include": "$self"
+        }
+      ]
+    },
+    "ternary-expression": {
+      "name": "meta.ternary-expression.jora",
+      "begin": "(\\?)(?![:?])",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.ternary.jora"
+        }
+      },
+      "end": "(:)",
+      "endCaptures": {
+        "1": {
+          "name": "keyword.operator.ternary.jora"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#ternary-expression"
+        },
+        {
+          "include": "$self"
+        }
+      ]
     },
     "scope-constant-language-boolean-true": {
       "match": "\\b(true)\\b",
@@ -145,48 +517,52 @@
       "name": "constant.language.jora"
     },
     "scope-keyword-operator-logical": {
-      "match": "\\b(or|and|not)\\b",
+      "match": "\\b(is|not|in|has|no|and|or)\\b",
       "name": "keyword.operator.logical.jora"
     },
+    "scope-keyword-operator-sort": {
+      "match": "\\b(asc|ascN|ascA|ascNA|ascAN|desc|descN|descA|descNA|descAN)\\b",
+      "name": "keyword.operator.sort.jora"
+    },
     "scope-punctuation-accessor": {
-      "match": "\\.",
+      "match": "\\.\\.\\(|\\.\\(|\\.\\[|\\.\\.|\\.",
       "name": "punctuation.accessor.jora"
     },
     "operator-overrides": {
-      "match": "(\\?\\?)|(!=)|(~=)|(<=)|(>=)|(=)|(<)|(>)|(\\|)|(\\+)|(-)|(\\*)|(/)|(%)",
+      "match": "(\\.\\.\\.)|(=>)|(\\?\\?)|(!=)|(~=)|(<=)|(>=)|(\\|)|(=)|(<)|(>)|(\\+)|(-)|(\\*)|(/)|(%)",
       "captures": {
         "1": {
-          "name": "keyword.operator.logical.jora"
+          "name": "keyword.operator.spread.jora"
         },
         "2": {
-          "name": "keyword.operator.comparison.jora"
+          "name": "keyword.operator.function.jora"
         },
         "3": {
-          "name": "keyword.operator.comparison.jora"
+          "name": "keyword.operator.logical.jora"
         },
         "4": {
-          "name": "keyword.operator.relational.jora"
+          "name": "keyword.operator.comparison.jora"
         },
         "5": {
-          "name": "keyword.operator.relational.jora"
+          "name": "keyword.operator.comparison.jora"
         },
         "6": {
-          "name": "keyword.operator.comparison.jora"
+          "name": "keyword.operator.relational.jora"
         },
         "7": {
           "name": "keyword.operator.relational.jora"
         },
         "8": {
-          "name": "keyword.operator.relational.jora"
-        },
-        "9": {
           "name": "keyword.operator.pipeline.jora"
         },
+        "9": {
+          "name": "keyword.operator.comparison.jora"
+        },
         "10": {
-          "name": "keyword.operator.arithmetic.jora"
+          "name": "keyword.operator.relational.jora"
         },
         "11": {
-          "name": "keyword.operator.arithmetic.jora"
+          "name": "keyword.operator.relational.jora"
         },
         "12": {
           "name": "keyword.operator.arithmetic.jora"
@@ -195,6 +571,12 @@
           "name": "keyword.operator.arithmetic.jora"
         },
         "14": {
+          "name": "keyword.operator.arithmetic.jora"
+        },
+        "15": {
+          "name": "keyword.operator.arithmetic.jora"
+        },
+        "16": {
           "name": "keyword.operator.arithmetic.jora"
         }
       }
@@ -207,9 +589,25 @@
       "match": "\\[|\\]",
       "name": "punctuation.bracket.square.jora"
     },
+    "scope-punctuation-separator-key-value": {
+      "match": ":",
+      "name": "punctuation.separator.key-value.jora"
+    },
     "scope-punctuation-separator-comma": {
       "match": ",",
       "name": "punctuation.separator.comma.jora"
+    },
+    "scope-punctuation-bracket-curly": {
+      "match": "\\{|\\}",
+      "name": "punctuation.bracket.curly.jora"
+    },
+    "scope-punctuation-terminator-statement": {
+      "match": ";",
+      "name": "punctuation.terminator.statement.jora"
+    },
+    "punctuation": {
+      "match": "\\?",
+      "name": "punctuation.jora"
     },
     "expression": {
       "patterns": [
@@ -220,16 +618,31 @@
           "include": "#blockcomment"
         },
         {
+          "include": "#regex-literal"
+        },
+        {
           "include": "#string"
         },
         {
+          "include": "#template"
+        },
+        {
           "include": "#object-method-key"
+        },
+        {
+          "include": "#arrow-function-params"
+        },
+        {
+          "include": "#ternary-expression"
         },
         {
           "include": "#number"
         },
         {
           "include": "#scope-keyword-operator-logical"
+        },
+        {
+          "include": "#scope-keyword-operator-sort"
         },
         {
           "include": "#scope-constant-language-boolean-true"
@@ -244,7 +657,25 @@
           "include": "#scope-constant-language"
         },
         {
+          "include": "#arg1"
+        },
+        {
+          "include": "#current"
+        },
+        {
+          "include": "#data"
+        },
+        {
+          "include": "#context"
+        },
+        {
           "include": "#method-call"
+        },
+        {
+          "include": "#known-property-access-0"
+        },
+        {
+          "include": "#known-property-access-1"
         },
         {
           "include": "#property-access"
@@ -262,7 +693,22 @@
           "include": "#scope-punctuation-bracket-square"
         },
         {
+          "include": "#scope-punctuation-separator-key-value"
+        },
+        {
           "include": "#scope-punctuation-separator-comma"
+        },
+        {
+          "include": "#scope-punctuation-bracket-curly"
+        },
+        {
+          "include": "#scope-punctuation-terminator-statement"
+        },
+        {
+          "include": "#punctuation"
+        },
+        {
+          "include": "#arrow-parameter"
         },
         {
           "include": "#function-call"
