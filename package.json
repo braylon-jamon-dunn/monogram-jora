@@ -36,7 +36,7 @@
     "start": "tsx src/index.ts",
     "test": "pnpm run build && vitest",
     "typecheck": "tsc",
-    "prepare": "git config core.hooksPath .githooks && simple-git-hooks && skills-npm"
+    "prepare": "git config core.hooksPath .githooks && simple-git-hooks && skills-npm && git submodule update --init --recursive"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",
