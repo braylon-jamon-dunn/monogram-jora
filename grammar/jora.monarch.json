@@ -12,26 +12,14 @@
       "open": "[",
       "close": "]",
       "token": "delimiter.square"
+    },
+    {
+      "open": "{",
+      "close": "}",
+      "token": "delimiter.bracket"
     }
   ],
   "tokenizer": {
-    "comment_slashstar": [
-      [
-        "[^*]+",
-        "comment"
-      ],
-      [
-        "\\**\\*/",
-        {
-          "token": "comment",
-          "next": "@pop"
-        }
-      ],
-      [
-        ".",
-        "comment"
-      ]
-    ],
     "string_dquote_body": [
       [
         "[^\"\\\\]+",
@@ -100,6 +88,155 @@
         }
       ]
     ],
+    "template_body": [
+      [
+        "\\$\\{",
+        {
+          "token": "delimiter.bracket",
+          "next": "@templateInterp"
+        }
+      ],
+      [
+        "[^`\\\\$]+",
+        "string"
+      ]
+    ],
+    "template": [
+      {
+        "include": "@template_body"
+      },
+      [
+        "`",
+        {
+          "token": "string",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        ".",
+        "string"
+      ]
+    ],
+    "templateN": [
+      {
+        "include": "@template_body"
+      },
+      [
+        "`",
+        {
+          "token": "string",
+          "next": "@pop"
+        }
+      ],
+      [
+        ".",
+        "string"
+      ]
+    ],
+    "templateInterp": [
+      [
+        "[ \\t\\r\\n]+",
+        "white"
+      ],
+      [
+        "//.*$",
+        "comment"
+      ],
+      [
+        "/\\*.*$",
+        "comment"
+      ],
+      [
+        "\"",
+        {
+          "token": "string",
+          "next": "@string_dquoteN"
+        }
+      ],
+      [
+        "'",
+        {
+          "token": "string",
+          "next": "@string_squoteN"
+        }
+      ],
+      [
+        "`",
+        {
+          "token": "string",
+          "next": "@templateN"
+        }
+      ],
+      [
+        "\\{",
+        {
+          "token": "delimiter.bracket",
+          "next": "@bracketCounting"
+        }
+      ],
+      [
+        "\\}",
+        {
+          "token": "delimiter.bracket",
+          "next": "@pop"
+        }
+      ],
+      {
+        "include": "@interpExprBody"
+      }
+    ],
+    "bracketCounting": [
+      [
+        "[ \\t\\r\\n]+",
+        "white"
+      ],
+      [
+        "//.*$",
+        "comment"
+      ],
+      [
+        "/\\*.*$",
+        "comment"
+      ],
+      [
+        "\"",
+        {
+          "token": "string",
+          "next": "@string_dquoteN"
+        }
+      ],
+      [
+        "'",
+        {
+          "token": "string",
+          "next": "@string_squoteN"
+        }
+      ],
+      [
+        "`",
+        {
+          "token": "string",
+          "next": "@templateN"
+        }
+      ],
+      [
+        "\\{",
+        {
+          "token": "delimiter.bracket",
+          "next": "@bracketCounting"
+        }
+      ],
+      [
+        "\\}",
+        {
+          "token": "delimiter.bracket",
+          "next": "@pop"
+        }
+      ],
+      {
+        "include": "@interpExprBody"
+      }
+    ],
     "exprBody": [
       [
         "[ \\t\\r\\n]+",
@@ -110,11 +247,8 @@
         "comment"
       ],
       [
-        "/\\*",
-        {
-          "token": "comment",
-          "next": "@comment_slashstar"
-        }
+        "/\\*.*$",
+        "comment"
       ],
       [
         "\"",
@@ -131,21 +265,56 @@
         }
       ],
       [
-        "[0-9]+(?:\\.[0-9]+)?(?:[eE][+\\-]?[0-9]+)?",
+        "`",
+        {
+          "token": "string",
+          "switchTo": "@template"
+        }
+      ],
+      [
+        "0[xX][0-9a-fA-F_]+|(?:[0-9_]*\\.)?[0-9_]+(?:[eE][+\\-]?[0-9_]+)?",
         {
           "token": "number",
           "switchTo": "@value"
         }
       ],
       [
-        "\\$[a-zA-Z0-9_]*",
+        "\\$(?:[a-zA-Z_]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$]|\\\\u[0-9a-fA-F]{4})*",
         {
           "token": "variable",
           "switchTo": "@value"
         }
       ],
       [
-        "[a-zA-Z_][a-zA-Z0-9_]*",
+        "\\$\\$",
+        {
+          "token": "keyword",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "\\$",
+        {
+          "token": "keyword",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "@",
+        {
+          "token": "keyword",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "#",
+        {
+          "token": "keyword",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "(?:[a-zA-Z_]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$]|\\\\u[0-9a-fA-F]{4})*",
         {
           "cases": {
             "true": {
@@ -172,7 +341,63 @@
               "token": "keyword",
               "switchTo": "@value"
             },
-            "or": {
+            "is": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "not": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "in": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "has": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "no": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "asc": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "ascN": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "ascA": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "ascNA": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "ascAN": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "desc": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "descN": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "descA": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "descNA": {
+              "token": "operator",
+              "switchTo": "@root"
+            },
+            "descAN": {
               "token": "operator",
               "switchTo": "@root"
             },
@@ -180,7 +405,7 @@
               "token": "operator",
               "switchTo": "@root"
             },
-            "not": {
+            "or": {
               "token": "operator",
               "switchTo": "@root"
             },
@@ -206,16 +431,23 @@
         }
       ],
       [
-        "\\(",
+        "\\}",
         {
-          "token": "delimiter.parenthesis",
+          "token": "delimiter.bracket",
+          "switchTo": "@value"
+        }
+      ],
+      [
+        "\\.\\.\\.|=>|\\?\\?|!=|~=|<=|>=|\\||=|<|>|\\+|-|\\*|%",
+        {
+          "token": "operator",
           "switchTo": "@root"
         }
       ],
       [
-        "\\.|,",
+        "\\(",
         {
-          "token": "delimiter",
+          "token": "delimiter.parenthesis",
           "switchTo": "@root"
         }
       ],
@@ -227,9 +459,16 @@
         }
       ],
       [
-        "\\?\\?|!=|~=|<=|>=|=|<|>|\\||\\+|-|\\*|/|%",
+        "\\.\\.\\(|\\.\\(|\\.\\[|\\.\\.|:|,|\\.|\\?|;",
         {
-          "token": "operator",
+          "token": "delimiter",
+          "switchTo": "@root"
+        }
+      ],
+      [
+        "\\{",
+        {
+          "token": "delimiter.bracket",
           "switchTo": "@root"
         }
       ]
@@ -237,12 +476,111 @@
     "root": [
       {
         "include": "@exprBody"
-      }
+      },
+      [
+        "/(?:\\\\[\\s\\S]|[^/\\n])+/[gimsu]*",
+        {
+          "token": "regexp",
+          "switchTo": "@value"
+        }
+      ]
     ],
     "value": [
       {
         "include": "@exprBody"
-      }
+      },
+      [
+        "/",
+        {
+          "token": "operator",
+          "switchTo": "@root"
+        }
+      ]
+    ],
+    "interpExprBody": [
+      [
+        "0[xX][0-9a-fA-F_]+|(?:[0-9_]*\\.)?[0-9_]+(?:[eE][+\\-]?[0-9_]+)?",
+        "number"
+      ],
+      [
+        "\\$(?:[a-zA-Z_]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$]|\\\\u[0-9a-fA-F]{4})*",
+        "variable"
+      ],
+      [
+        "\\$\\$",
+        "keyword"
+      ],
+      [
+        "\\$",
+        "keyword"
+      ],
+      [
+        "@",
+        "keyword"
+      ],
+      [
+        "#",
+        "keyword"
+      ],
+      [
+        "(?:[a-zA-Z_]|\\\\u[0-9a-fA-F]{4})(?:[a-zA-Z0-9_$]|\\\\u[0-9a-fA-F]{4})*",
+        {
+          "cases": {
+            "true": "keyword",
+            "false": "keyword",
+            "null": "keyword",
+            "undefined": "keyword",
+            "NaN": "keyword",
+            "Infinity": "keyword",
+            "is": "operator",
+            "not": "operator",
+            "in": "operator",
+            "has": "operator",
+            "no": "operator",
+            "asc": "operator",
+            "ascN": "operator",
+            "ascA": "operator",
+            "ascNA": "operator",
+            "ascAN": "operator",
+            "desc": "operator",
+            "descN": "operator",
+            "descA": "operator",
+            "descNA": "operator",
+            "descAN": "operator",
+            "and": "operator",
+            "or": "operator",
+            "@default": "identifier"
+          }
+        }
+      ],
+      [
+        "/(?:\\\\[\\s\\S]|[^/\\n])+/[gimsu]*",
+        "regexp"
+      ],
+      [
+        "/",
+        "operator"
+      ],
+      [
+        "\\.\\.\\.|=>|\\?\\?|!=|~=|<=|>=|\\||=|<|>|\\+|-|\\*|%",
+        "operator"
+      ],
+      [
+        "\\(|\\)",
+        "delimiter.parenthesis"
+      ],
+      [
+        "\\[|\\]",
+        "delimiter.square"
+      ],
+      [
+        "\\.\\.\\(|\\.\\(|\\.\\[|\\.\\.|:|,|\\.|\\?|;",
+        "delimiter"
+      ],
+      [
+        "\\{|\\}",
+        "delimiter.bracket"
+      ]
     ]
   }
 }

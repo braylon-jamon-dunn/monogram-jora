@@ -15,10 +15,19 @@ You write the grammar once in Monogram's combinator API
 a VS Code language configuration, a Monaco Monarch tokenizer, and a tree-sitter
 grammar from it.
 
-> **Status:** early setup. `grammar/jora.ts` is currently a **stub** covering
-> only part of Jora's surface syntax — enough to prove the generation pipeline
-> end-to-end. Fleshing it out into a complete, conformance-proven grammar is
-> follow-up work.
+> **Status:** the grammar covers Jora's full surface syntax — literals
+> (numbers, strings, templates, regexps), `$`-variables and the `@`/`#`/`$`/`$$`
+> references, all operators, `is` assertions, dot/bracket/slice access, maps
+> `.( )` / filters `.[ ]` / recursive maps `..`, method calls, functions,
+> object/array literals with spreads, multi-key sort, and `$x:` definitions.
+> It is validated against Jora's own language test suite: of the 288 valid
+> queries there, 287 parse (see `test/grammar-corpus.test.ts`).
+>
+> Two known, deliberate divergences from Jora's parser: an identifier whose
+> `\uXXXX` escape decodes to a non-identifier character (e.g. `\u0020`, a space)
+> is rejected rather than accepted, and a regexp with a duplicate flag
+> (`/x/gg`) is accepted syntactically rather than rejected. Neither affects
+> highlighting of real queries.
 
 ## Layout
 
