@@ -1,7 +1,7 @@
 {
   "name": "monogram-jora",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "packageManager": "pnpm@11.1.3",
   "description": "TextMate grammar, VS Code language configuration, Monaco Monarch tokenizer, and tree-sitter grammar for the Jora query language, derived from a single grammar definition with Monogram.",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
